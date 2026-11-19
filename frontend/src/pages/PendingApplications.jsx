@@ -21,6 +21,13 @@ import {
 import ConfirmModal from "../admin/components/ConfirmModal";
 import RejectModal from "../admin/components/RejectModal";
 
+import {
+  getKind,
+  getRole,
+  ROLE_LABEL,
+  approveText,
+} from "../admin/applicationUtils";
+
 import "../admin-dashboard.css";
 
 
@@ -90,6 +97,9 @@ function formatDate(value) {
 
 function normalizeApplication(application) {
 
+  const role = getRole(application);
+  const kind = getKind({ role });
+
   return {
 
     // MongoDB ID
@@ -103,18 +113,21 @@ function normalizeApplication(application) {
       application.full_name ||
       "Not provided",
 
-    // Organization
-    organizationName:
-      application.club_name ||
-      application.organization_name ||
-      application.organizationName ||
-      "Not provided",
+    // "faculty" (Faculty / HOD / Dean) or "organization" (Club etc.)
+    kind,
+    role,
 
-    // Role
-    organizationType:
-      application.role === "intercollege"
-        ? "intercollege"
-        : "club",
+    // Organization for clubs, Department for Faculty / HOD / Dean
+    organizationName:
+      kind === "faculty"
+        ? application.department || "Not provided"
+        : application.club_name ||
+          application.organization_name ||
+          application.organizationName ||
+          "Not provided",
+
+    // Role (club, intercollege, faculty, hod, dean)
+    organizationType: role,
 
     // College / University
     college:
@@ -124,12 +137,14 @@ function normalizeApplication(application) {
       application.university_name ||
       "Not provided",
 
-    // Position
+    // Position (clubs) / Designation (Faculty / HOD / Dean)
     position:
-      application.position ||
-      application.club_position ||
-      application.coordinator_position ||
-      "Not provided",
+      kind === "faculty"
+        ? application.designation || ROLE_LABEL[role] || "Not provided"
+        : application.position ||
+          application.club_position ||
+          application.coordinator_position ||
+          "Not provided",
 
     // Date
     date:
@@ -670,7 +685,7 @@ export default function PendingApplications() {
             <div className="page-head">
 
               <h1>
-                Organization Applications
+                Applications
               </h1>
 
               <p>
@@ -827,11 +842,11 @@ export default function PendingApplications() {
             <div>
 
               <h1>
-                Pending Organization Applications
+                Pending Applications
               </h1>
 
               <p>
-                Review Club and Inter-College
+                Review organization, HOD, Dean and Faculty
                 registrations before activation.
               </p>
 
@@ -902,6 +917,18 @@ export default function PendingApplications() {
 
               <option value="intercollege">
                 Inter-College
+              </option>
+
+              <option value="hod">
+                HOD
+              </option>
+
+              <option value="dean">
+                Dean
+              </option>
+
+              <option value="faculty">
+                Faculty
               </option>
 
             </select>
@@ -1033,7 +1060,7 @@ export default function PendingApplications() {
                     </th>
 
                     <th>
-                      ORGANIZATION
+                      ORGANIZATION / DEPARTMENT
                     </th>
 
                     <th>
@@ -1045,7 +1072,7 @@ export default function PendingApplications() {
                     </th>
 
                     <th>
-                      POSITION
+                      POSITION / DESIGNATION
                     </th>
 
                     <th>
@@ -1092,10 +1119,7 @@ export default function PendingApplications() {
 
                         <td>
 
-                          {application.organizationType ===
-                          "intercollege"
-                            ? "Inter-College"
-                            : "Club"}
+                          {ROLE_LABEL[application.organizationType] || "Club"}
 
                         </td>
 
@@ -1284,10 +1308,14 @@ export default function PendingApplications() {
         open={
           !!confirmApp
         }
-        title="Approve Organization?"
+        title={
+          confirmApp
+            ? approveText(confirmApp).title
+            : "Approve?"
+        }
         message={
           confirmApp
-            ? `Approve "${confirmApp.organizationName}"? This will activate the organization account.`
+            ? approveText(confirmApp).message
             : ""
         }
         confirmLabel="Approve"

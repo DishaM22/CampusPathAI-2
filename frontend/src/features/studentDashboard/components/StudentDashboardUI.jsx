@@ -1,9 +1,6 @@
 import { useEffect, useRef } from "react";
 
-
-
 // Exact original CampusPath AI HTML/CSS/vanilla-JS is kept intact.
-
 // React only supplies live data through postMessage; no dashboard styling is rewritten.
 
 const DASHBOARD_HTML = `<!DOCTYPE html>
@@ -61,12 +58,29 @@ section{margin-bottom:34px}.sh{display:flex;justify-content:space-between;align-
 .tt{display:grid;grid-template-columns:60px repeat(5,1fr);gap:4px;overflow-x:auto;min-width:420px}.tt div{padding:6px;border-radius:8px;background:var(--c2);text-align:center;font-size:12px}.tt .b{background:#35408a}.tt .br{background:#2f5d50;color:#c9f7e6}.tt small{opacity:.8;font-size:10px}.tt .e{cursor:pointer;outline:1px dashed var(--p)}
 .mo{position:fixed;inset:0;background:#000a;display:grid;place-items:center;z-index:50;padding:16px}.mo .card{max-width:440px;width:100%;padding:22px}
 #toast{position:fixed;bottom:84px;left:50%;transform:translateX(-50%);background:var(--c2);border:1px solid var(--p);border-radius:12px;padding:10px 16px;z-index:60}
+#demoBar{background:#3b2a05;border-bottom:1px solid var(--wn);color:#fde68a;padding:8px 18px;font-size:13px;text-align:center}
 #bnav{display:none;position:fixed;bottom:0;left:0;right:0;background:#0e1430;border-top:1px solid var(--bd);padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));z-index:25;justify-content:space-around}
 #bnav button{background:none;border:0;color:var(--mu);font-size:11px;padding:4px 8px}#bnav .on{color:var(--p)}
 .live{font-size:12px;color:var(--mu)}.live:before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ok);margin-right:6px}
 .tg{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--bd)}
 .un{border-left:3px solid var(--p)}
 @media(max-width:900px){#side{transform:translateX(-100%)}#side.open{transform:none}#wrap{margin-left:0}#menu{display:block}main{padding:16px 14px 90px}#bnav{display:flex}header{padding:10px 14px}.grid{grid-template-columns:1fr}.hn{display:none}}
+/* ---- Light theme (Settings > Appearance) ---- */
+:root{color-scheme:dark}
+html[data-theme="light"]{color-scheme:light;--bg:#f4f6fc;--card:#ffffff;--c2:#eef1fb;--bd:#d9dff2;--tx:#141a33;--mu:#5b6590;--ok:#059669;--wn:#b45309;--er:#dc2626}
+html[data-theme="light"] #side,html[data-theme="light"] #bnav{background:#fff}
+html[data-theme="light"] header{background:rgba(244,246,252,.92)}
+html[data-theme="light"] .card{box-shadow:0 6px 18px #1a225018}
+html[data-theme="light"] #drop,html[data-theme="light"] #pm{box-shadow:0 12px 30px #1a225026}
+html[data-theme="light"] .match{background:#ffffffe6}
+html[data-theme="light"] .hero{background:linear-gradient(135deg,#e7e9ff,#dbeafe)}
+html[data-theme="light"] .note{background:#eeebff}
+html[data-theme="light"] .dn{background:#fdecef;border-color:#f3b4c0}
+html[data-theme="light"] .tl .x{background:#b8c0e6}
+html[data-theme="light"] .tt .b{background:#dbe2ff}
+html[data-theme="light"] .tt .br{background:#d6f3e7;color:#065f46}
+html[data-theme="light"] .mo{background:#1a225066}
+html[data-theme="light"] #demoBar{background:#fef3c7;color:#92400e}
 </style></head><body>
 <aside id="side"></aside>
 <div id="wrap">
@@ -75,6 +89,7 @@ section{margin-bottom:34px}.sh{display:flex;justify-content:space-between;align-
 <span class="live hn" id="live"></span><span style="flex:1"></span>
 <button class="ib" data-a="nav" data-i="notifications" aria-label="Notifications">🔔<span class="dot" id="nd"></span></button>
 <button class="av" data-a="pm" aria-label="Profile menu">\${P.initials}</button><div id="pm" hidden></div></header>
+<div id="demoBar" hidden></div>
 <main id="main"></main></div>
 <nav id="bnav"></nav><div id="modal"></div><div id="toast" hidden></div>
 <script>
@@ -88,6 +103,8 @@ const TODAY=(()=>{
 const CATS=[["Technical Workshops","🛠️"],["Hackathons","💻"],["Career","💼"],["Cultural","🎭"],["Sports","🏅"],["Academic","📚"],["Competitions","🏆"],["Seminars","🎤"],["Other","✨"]];
 /* ---- mock data: replace with FastAPI/MongoDB responses ---- */
 const mk=(id,title,cat,org,date,s,e,venue,type,mode,skills,dept,yrs,seats,dl,em,hue,desc)=>({id,title,cat,org,date,s,e,venue,type,mode,skills,dept,yrs,seats,dl,em,hue,desc});
+// No Registration Required events have no Register button: students use their attendance pass instead
+const regBtn=(e,label)=>(e.registration_required===false||e.reg_required===false)?'<button class="bt pr" data-a="eqr" data-i="'+e.id+'">My Attendance Pass</button>':closedE(e)?'<button class="bt" disabled>Registration Closed</button>':'<button class="bt pr" data-a="reg" data-i="'+e.id+'">'+label+'</button>';
 let EV=[
 mk(1,"AI & Machine Learning Workshop","Technical Workshops","AI Club","2026-10-10",10,12,"Seminar Hall 1","Workshop","Offline",["Python","Machine Learning"],"CSE","2nd–4th",40,"2026-10-08","🤖",260,"Hands-on session on building and evaluating ML models with scikit-learn."),
 mk(2,"Machine Learning Bootcamp","Technical Workshops","Data Science Society","2026-10-12",14,16,"Lab 3","Bootcamp","Offline",["Python","Statistics","Machine Learning"],"CSE, IT","3rd–4th",30,"2026-10-10","📊",230,"Two-hour intensive on feature engineering and model tuning."),
@@ -112,9 +129,29 @@ const api={
   return EV.filter(e=>e.date>=TODAY).map(e=>{const m=e.skills.filter(s=>w.includes(s.toLowerCase())||(e.title+e.cat).toLowerCase().split(" ").some(x=>x.length>3&&w.includes(x))).length;
    const a=avail(e),r=[];if(m)r.push("Matches your interests","Matches your skills");if(/AI|Machine|Data/.test(e.title))r.push("Matches your career goal");if(a.free)r.push("Fits your available time");
    return{eventId:e.id,matchScore:m?Math.min(97,60+m*12+(a.free?8:0)+(/AI|Machine/.test(e.title)?8:0)):null,recommendationReason:r,availability:a.free?"free":"conflict",ranking:0}}).sort((x,y)=>(y.matchScore||0)-(x.matchScore||0)).map((r,i)=>({...r,ranking:i+1}))},
- signal(id,type){S.sig.push({eventId:id,type,ts:Date.now()});/* POST /api/interactions */}};
-const S={view:"dashboard",ev:null,q:"",load:false,fail:false,cold:true,tab:"Upcoming",cv:"month",cd:TODAY,cat:"",f:{},edit:false,editTT:false,
- reg:{},saved:new Set([5]),hid:new Set(),sig:[],recs:[],upd:new Date(),poll:30,
+ sent:new Set(),
+ signal(id,type){S.sig.push({eventId:id,type,ts:Date.now()});
+  /* PHASE A: only views and "not interested" are sent from the browser.
+     Registrations, saves and attendance are recorded by the server itself.
+     Fire-and-forget: this never throws and never blocks the UI. */
+  if(type!=="view"&&type!=="not_interested")return;
+  try{
+   const token=localStorage.getItem("token");
+   if(!token||!id)return;
+   const key=type+":"+id;
+   if(api.sent.has(key))return;
+   api.sent.add(key);
+   const src=type==="view"||S.view==="detail"?"event_details":(S.view==="dashboard"||S.view==="recommended"?"dashboard_recommended":"events_list");
+   fetch("http://127.0.0.1:8000/api/interactions",{
+    method:"POST",
+    headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},
+    body:JSON.stringify({event_id:String(id),action:type,source:src}),
+    keepalive:true
+   }).catch(()=>{});
+  }catch(error){}
+ }};
+const S={view:"dashboard",ev:null,q:"",load:false,fail:false,cold:true,tab:"Upcoming",cv:"month",cd:TODAY,cm:TODAY.slice(0,7),cat:"",f:{},edit:false,editTT:false,
+ reg:{},saved:new Set([5]),hid:new Set(),hidList:[],sig:[],recs:[],upd:new Date(),poll:30,
  notes:[{t:"AI Workshop registration confirmed.",w:"2h ago",r:0},{t:"New event matches your interests: Machine Learning Bootcamp.",w:"5h ago",r:0},{t:"New event is available during your free period.",w:"Yesterday",r:0},{t:"Registration deadline is tomorrow: Research Paper Writing Seminar.",w:"Yesterday",r:1},{t:"Your registered event starts tomorrow: Resume & Internship Clinic.",w:"2d ago",r:1}]};
 const $=s=>document.querySelector(s),fmt=h=>{
 
@@ -151,6 +188,8 @@ function extras(e){
  if(rp)h+='<p><b>Event Report</b></p><p><a class="bt pr" href="'+esc(rp)+'" target="_blank" rel="noopener noreferrer" style="display:inline-block;text-decoration:none">📄 View / Download Report (PDF)</a></p>';
  return h;
 }
+function closedE(e){return e.reg_required!==false&&(e.reg_closed===true||(!!e.reg_deadline&&Date.parse(e.reg_deadline)<Date.now()))}
+function fmtDl(v){const m=Date.parse(v);return isNaN(m)?"":new Date(m).toLocaleString("en-IN",{timeZone:"Asia/Kolkata",day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:true})+" IST"}
 function avail(e){const rr=(typeof R==="function")?R(e.id):null;if(rr&&rr.scheduleStatus==="conflict")return{free:false,clash:rr.scheduleDetail||"overlaps a class"};if(rr&&(rr.scheduleStatus==="free"||rr.scheduleStatus==="tight"))return{free:true};const d=dow(e.date);if(e.mode==="Online"&&0)return{free:1};const c=CLS[d]||{};for(const h in c)if(+h<e.e&&+h+1>e.s)return{free:false,clash:c[h]+" at "+fmt(+h)};return{free:true}}
 function free(d){const c=CLS[d]||{},o=[];let s=null;for(let h=9;h<=17;h++){const f=h<17&&!c[h];if(f&&s===null)s=h;if(!f&&s!==null){o.push([s,h]);s=null}}return o}
 
@@ -549,6 +588,51 @@ async function loadSavedTimetable(sourceTimetable=null){
 
 const R=id=>S.recs.find(r=>String(r.eventId)===String(id))||{},E=id=>EV.find(e=>String(e.id)===String(id)),up=()=>EV.filter(e=>e.date>=TODAY);
 const toast=m=>{const t=$("#toast");t.textContent=m;t.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>t.hidden=true,2600)};
+/* ---- PHASE H: "not interested" (hidden events) ---- */
+const HIDE_API="http://127.0.0.1:8000";
+const authHeaders=()=>{const k=localStorage.getItem("token");return k?{"Content-Type":"application/json","Authorization":"Bearer "+k}:null};
+const toastUndo=(m,id)=>{const t=$("#toast");t.textContent="";const s=document.createElement("span");s.textContent=m+" ";const b=document.createElement("button");b.className="bt";b.textContent="Undo";b.dataset.a="undoDown";b.dataset.i=id;t.appendChild(s);t.appendChild(b);t.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>t.hidden=true,7000)};
+async function loadHidden(){
+  const h=authHeaders();if(!h)return;
+  try{
+    const r=await fetch(HIDE_API+"/api/me/not-interested",{headers:h});
+    if(!r.ok)return;
+    const d=await r.json();
+    S.hidList=Array.isArray(d.events)?d.events:[];
+    S.hid=new Set(S.hidList.map(x=>String(x.event_id)));
+    render();
+  }catch(error){}
+}
+async function loadDemo(){
+  const h=authHeaders();if(!h)return;
+  try{
+    const r=await fetch(HIDE_API+"/api/demo/status",{headers:h});
+    if(!r.ok)return;
+    const d=await r.json();
+    const el=document.getElementById("demoBar");if(!el)return;
+    if(d&&d.demo_active){el.textContent="\u{1F9EA} "+String(d.message||"Demo mode");el.title=String(d.detail||"");el.hidden=false;}
+    else{el.hidden=true;}
+  }catch(error){}
+}
+function hiddenCard(){
+  const main=$("#main");if(!main||S.view!=="settings")return;
+  const old=$("#hiddenCard");if(old)old.remove();
+  const box=document.createElement("div");box.id="hiddenCard";box.className="card pad";box.style.marginTop="12px";
+  const title=document.createElement("b");title.textContent="Hidden events ("+S.hidList.length+")";box.appendChild(title);
+  const note=document.createElement("div");note.className="mu";note.textContent="Events you marked as not interested are left out of your recommendations. You can bring them back here.";box.appendChild(note);
+  if(!S.hidList.length){
+    const none=document.createElement("div");none.className="mu";none.textContent="You have not hidden any events.";box.appendChild(none);
+  }else{
+    S.hidList.forEach(x=>{
+      const row=document.createElement("div");row.className="row";row.style.justifyContent="space-between";row.style.marginTop="8px";
+      const name=document.createElement("span");name.textContent=x.title||"Event";row.appendChild(name);
+      const b=document.createElement("button");b.className="bt";b.textContent="Show again";b.dataset.a="undoDown";b.dataset.i=x.event_id;row.appendChild(b);
+      box.appendChild(row);
+    });
+    const all=document.createElement("button");all.className="bt";all.style.marginTop="10px";all.textContent="Show all again";all.dataset.a="undoAll";box.appendChild(all);
+  }
+  main.appendChild(box);
+}
 
 /* ---- React bridge: data is supplied by StudentDashboard.jsx; UI/CSS stays unchanged ---- */
 window.applyCampusPathData = function(data){
@@ -702,7 +786,13 @@ if (Array.isArray(incomingRegistrations)) {
         dl:event.dl ?? event.registration_deadline ?? event.deadline ?? event.date,
         em:event.em ?? event.emoji ?? "📅",
         hue:event.hue ?? 220,
-        desc:event.desc ?? event.description ?? ""
+        desc:event.desc ?? event.description ?? "",
+        // false only for "No Registration Required" events; older events
+        // have no field and keep the Register button.
+        reg_required:event.registration_required !== false,
+        // registration deadline (IST ISO text) and the server's closed flag
+        reg_deadline:event.registration_deadline || null,
+        reg_closed:event.registration_closed === true
       };
     });
   }
@@ -855,6 +945,8 @@ if (Array.isArray(incomingRegistrations)) {
 window.addEventListener("message", function(ev){
   if(ev.data && ev.data.type === "CAMPUSPATH_DASHBOARD_DATA"){
     window.applyCampusPathData(ev.data.payload);
+    loadHidden();
+
   }
 });
 const _campusPathRender=render;
@@ -862,6 +954,7 @@ render=function(){
   _campusPathRender();
   const initials=(P.initials||"ST").toUpperCase();
   document.querySelectorAll(".av").forEach(x=>x.textContent=initials);
+  hiddenCard();
 };
 
 /* ---- components ---- */
@@ -871,7 +964,7 @@ return\`<article class="card ev"><div class="post" style="\${posterUrl(e)?"backg
 <div>📅 \${dt(e.date)}</div><div>⏰ \${tr(e)}</div><div>📍 \${e.venue}</div>
 <div class="\${a.free?"ok":"wn"}">\${a.free?"✓ Fits your schedule":"⚠ Schedule conflict · "+a.clash}</div>
 \${rec&&r.recommendationReason?.length?\`<div class="mu" style="font-size:12px">\${r.recommendationReason.map(x=>"✓ "+x).join("<br>")}</div>\`:""}
-<div class="row sp"><button class="bt" data-a="view" data-i="\${e.id}">View Details</button>\${st==="Registered"?\`<button class="bt" disabled>Registered ✓</button>\`:\`<button class="bt pr" data-a="reg" data-i="\${e.id}">Register</button>\`}
+<div class="row sp"><button class="bt" data-a="view" data-i="\${e.id}">View Details</button>\${st==="Registered"?\`<button class="bt" disabled>Registered ✓</button>\`:regBtn(e,"Register")}
 <span class="fb"><button data-a="up" data-i="\${e.id}" title="Interested" aria-label="Interested">👍</button><button data-a="down" data-i="\${e.id}" title="Not interested" aria-label="Not interested">👎</button><button class="\${sv?"a":""}" data-a="save" data-i="\${e.id}" title="Save" aria-label="Save">🔖</button></span></div></div></article>\`}
 const skel=n=>\`<div class="grid">\${"<div class=sk></div>".repeat(n)}</div>\`;
 const err=(m,a)=>\`<div class="card pad" style="text-align:center"><div class="er t">\${m}</div><p class="mu">Check your connection, then try again.</p><button class="bt pr" data-a="retry">Retry</button></div>\`;
@@ -881,15 +974,15 @@ const grid=(l,rec)=>\`<div class="grid">\${l.map(e=>card(e,rec)).join("")}</div>
 const cats=()=>\`<div class="cats">\${CATS.map(c=>\`<button class="cat" data-a="cat" data-i="\${c[0]}"><i>\${c[1]}</i>\${c[0]}</button>\`).join("")}</div>\`;
 const recList=()=>S.recs.filter(r=>!S.hid.has(r.eventId)&&E(r.eventId)&&E(r.eventId).date>=TODAY).map(r=>E(r.eventId));
 const coldNote=()=>S.cold?\`<div class="note"><span>Your recommendations are based on your profile. As you explore more events, we'll personalize them further.</span><button class="bt" data-a="hideCold">Got it</button></div>\`:"";
-function fitSec(){const d=dow(TODAY),w=free(d),fit=up().filter(e=>e.date>TODAY&&avail(e).free).slice(0,2),cf=up().find(e=>!avail(e).free);
+function fitSec(){const d=dow(TODAY),w=free(d),fit=up().filter(e=>e.date>TODAY&&avail(e).free).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0).slice(0,4),cf=up().find(e=>!avail(e).free);
 return sec("📅 Fits Your Schedule",\`You have free time today: \${w.map(x=>fmt(x[0])+" – "+fmt(x[1])).join(", ")||"none"}. Matched against your timetable.\`,fit.length||cf?grid([...fit,...(cf?[cf]:[])]):empty("📅","No events match your free periods yet.","New events are checked automatically."))}
 /* ---- views ---- */
 const V={
-dashboard(){const w=free(dow(TODAY)),rl=recList(),n=rl.filter(e=>e.date===TODAY).length||Math.min(6,rl.length);
+dashboard(){const w=free(dow(TODAY)),rl=recList(),nToday=rl.filter(e=>e.date===TODAY).length;
  if(S.load)return skel(3)+"<h2 style='margin:24px 0 12px'>Categories</h2>"+skel(2);
  const hr=new Date().getHours(),g=hr<12?"morning":hr<17?"afternoon":"evening";
  return\`<h1>CampusPath AI</h1><p class="sub">Discover campus events that match your interests, goals and schedule.</p>
-<div class="hero"><div><h1>Good \${g}, \${P.name.split(" ")[0]} 👋</h1><div>You have \${n} recommended events today.</div><div class="mu">Your next available period: <b style="color:var(--tx)">\${w[0]?fmt(w[0][0])+" – "+fmt(w[0][1]):"—"}</b></div></div>
+<div class="hero"><div><h1>Good \${g}, \${P.name.split(" ")[0]} 👋</h1><div>You have \${rl.length} recommended event\${rl.length===1?"":"s"}\${nToday?\` · \${nToday} happening today\`:""}.</div><div class="mu">Your next available period: <b style="color:var(--tx)">\${w[0]?fmt(w[0][0])+" – "+fmt(w[0][1]):"—"}</b></div></div>
 <div><div class="mu">Today's availability · 9 AM – 5 PM</div><div class="tl">\${[9,10,11,12,13,14,15,16].map(h=>\`<span class="\${(CLS[dow(TODAY)]||{})[h]?"x":""}" title="\${fmt(h)}"></span>\`).join("")}</div><div class="mu" style="font-size:12px">Green = free · Grey = class</div></div></div><br>\${coldNote()}\`+
  sec("✨ Recommended For You","Events selected based on your interests, skills, career goals and availability.",S.fail?err("Unable to load recommendations."):rl.length?grid(rl.slice(0,6),1):empty("🔍","No upcoming events to recommend right now. Events that have ended or that you already registered for are not shown here. Browse everything under Discover Events."),\`<button class="bt" data-a="nav" data-i="recommended">See all</button>\`)+
  (S.fail?"":fitSec())+
@@ -905,28 +998,29 @@ discover(){if(S.load)return skel(6);const f=S.f,q=S.q.toLowerCase(),o=k=>[...new
 \${S.fail?err("Unable to load events."):l.length?grid(l):empty("🔎","No events match these filters.","Try clearing a filter.")}\${sec("Browse by category","",cats())}\`},
 detail(){const e=E(S.ev),r=R(e.id),a=avail(e),st=S.reg[e.id],rs=r.recommendationReason||[];
  return\`<button class="bt" data-a="back">← Back</button><br><br><div class="card"><div class="post" style="height:200px;font-size:80px;\${posterUrl(e)?"background:#0e1429 url('"+posterUrl(e)+"') center/cover no-repeat":"background:linear-gradient(135deg,hsl("+e.hue+" 70% 35%),hsl("+(e.hue+50)+" 70% 22%))"}">\${posterUrl(e)?"":e.em}\${r.matchScore!=null?\`<span class="match">⭐ \${r.matchScore}% Match</span>\`:""}</div><div class="pad"><h1>\${e.title}</h1><div class="mu">\${e.org} · \${e.cat}</div><p>\${e.desc}</p>
-<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))"><div>📅 \${dt(e.date)}</div><div>⏰ \${tr(e)}</div><div>📍 \${e.venue}</div><div>🎟️ \${e.type} · \${e.mode}</div><div>🪑 \${e.seats} seats available</div><div>⏳ Register by \${dt(e.dl)}</div><div>🎓 Years: \${e.yrs}</div><div>🏫 Departments: \${e.dept}</div><div>✅ Eligibility: \${e.yrs==="All"?"Open to all students":e.yrs+" year students"}</div></div>
+<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))"><div>📅 \${dt(e.date)}</div><div>⏰ \${tr(e)}</div><div>📍 \${e.venue}</div><div>🎟️ \${e.type} · \${e.mode}</div><div>🪑 \${e.seats} seats available</div><div>\${e.reg_required===false?"✅ No Registration Required":closedE(e)?"⛔ Registration closed"+(e.reg_deadline?" ("+fmtDl(e.reg_deadline)+")":""):"⏳ Register by "+(e.reg_deadline?fmtDl(e.reg_deadline):dt(e.dl))}</div><div>🎓 Years: \${e.yrs}</div><div>🏫 Departments: \${e.dept}</div><div>✅ Eligibility: \${e.yrs==="All"?"Open to all students":e.yrs+" year students"}</div></div>
 <p><b>Skills</b><br>\${e.skills.map(s=>\`<span class="chip">\${s}</span>\`).join("")}</p>
 \${extras(e)}
 <div class="card pad" style="background:var(--c2)"><b>Why this event is recommended for you</b><br>\${rs.length?rs.map(x=>"✓ "+x).join("<br>"):"Based on your profile."}<br><span class="\${a.free?"ok":"wn"}">\${a.free?"✓ Available during your free period":"⚠ Schedule conflict · "+a.clash}</span></div><br>
-<div class="row">\${st==="Registered"?\`<button class="bt" disabled>Registered ✓</button>\`:\`<button class="bt pr" data-a="reg" data-i="\${e.id}">Register Now</button>\`}<button class="bt" data-a="save" data-i="\${e.id}">\${S.saved.has(e.id)?"🔖 Saved":"Save Event"}</button><span class="fb"><button data-a="up" data-i="\${e.id}">👍</button><button data-a="down" data-i="\${e.id}">👎</button></span></div></div></div>\`},
+<div class="row">\${st==="Registered"?\`<button class="bt" disabled>Registered ✓</button>\`:regBtn(e,"Register Now")}<button class="bt" data-a="save" data-i="\${e.id}">\${S.saved.has(e.id)?"🔖 Saved":"Save Event"}</button><span class="fb"><button data-a="up" data-i="\${e.id}">👍</button><button data-a="down" data-i="\${e.id}">👎</button></span></div></div></div>\`},
 registrations(){if(S.load)return skel(3);const t=S.tab,l=Object.entries(S.reg).filter(([i,s])=>t==="Upcoming"?s==="Registered":s===t).map(([i])=>E(i)).filter(Boolean);
  return\`<h1>📝 My Registrations</h1><div class="tabs">\${["Upcoming","Completed","Cancelled"].map(x=>\`<button class="bt \${t===x?"on":""}" data-a="tab" data-i="\${x}">\${x}</button>\`).join("")}</div>\`+
- (l.length?l.map(e=>\`<div class="card pad row" style="margin-bottom:10px;justify-content:space-between"><div><div class="t">\${e.title}</div><div class="mu">\${e.org} · \${dt(e.date)} · \${tr(e)} · \${e.venue}</div><span class="\${t==="Cancelled"?"er":"ok"}">\${t==="Upcoming"?"Registered ✓":t}</span></div><div class="row"><button class="bt" data-a="view" data-i="\${e.id}">View Event</button>\${t==="Upcoming"?\`<button class="bt dn" data-a="cancel" data-i="\${e.id}">Cancel</button>\`:""}</div></div>\`).join(""):empty("📝","You haven't registered for any events yet.","",\`<button class="bt pr" data-a="nav" data-i="recommended">See recommendations</button>\`))},
-saved(){const l=[...S.saved].map(E);return\`<h1>🔖 Saved Events</h1><br>\`+(l.length?l.map(e=>\`<div class="card pad row" style="margin-bottom:10px;justify-content:space-between"><div><div class="t">\${e.title}</div><div class="mu">\${e.org} · \${dt(e.date)} · \${tr(e)} · \${e.venue}</div><span class="\${S.reg[e.id]==="Registered"?"ok":"mu"}">\${S.reg[e.id]==="Registered"?"Registered ✓":"Not registered"}</span></div><div class="row"><button class="bt" data-a="view" data-i="\${e.id}">View</button>\${S.reg[e.id]==="Registered"?"":\`<button class="bt pr" data-a="reg" data-i="\${e.id}">Register</button>\`}<button class="bt dn" data-a="save" data-i="\${e.id}">Remove from Saved</button></div></div>\`).join(""):empty("🔖","You haven't saved any events yet.","Save events to decide later.",\`<button class="bt pr" data-a="nav" data-i="discover">Discover events</button>\`))},
+ (l.length?l.map(e=>\`<div class="card pad row" style="margin-bottom:10px;justify-content:space-between"><div><div class="t">\${e.title}</div><div class="mu">\${e.org} · \${dt(e.date)} · \${tr(e)} · \${e.venue}</div><span class="\${t==="Cancelled"?"er":"ok"}">\${t==="Upcoming"?"Registered ✓":t}</span></div><div class="row"><button class="bt" data-a="view" data-i="\${e.id}">View Event</button>\${t==="Upcoming"?\`<button class="bt" data-a="eqr" data-i="\${e.id}">My QR</button>\`:""}\${t==="Upcoming"?\`<button class="bt dn" data-a="cancel" data-i="\${e.id}">Cancel</button>\`:""}</div></div>\`).join(""):empty("📝","You haven't registered for any events yet.","",\`<button class="bt pr" data-a="nav" data-i="recommended">See recommendations</button>\`))},
+saved(){const l=[...S.saved].map(E);return\`<h1>🔖 Saved Events</h1><br>\`+(l.length?l.map(e=>\`<div class="card pad row" style="margin-bottom:10px;justify-content:space-between"><div><div class="t">\${e.title}</div><div class="mu">\${e.org} · \${dt(e.date)} · \${tr(e)} · \${e.venue}</div><span class="\${S.reg[e.id]==="Registered"?"ok":"mu"}">\${S.reg[e.id]==="Registered"?"Registered ✓":"Not registered"}</span></div><div class="row"><button class="bt" data-a="view" data-i="\${e.id}">View</button>\${S.reg[e.id]==="Registered"?"":regBtn(e,"Register")}<button class="bt dn" data-a="save" data-i="\${e.id}">Remove from Saved</button></div></div>\`).join(""):empty("🔖","You haven't saved any events yet.","Save events to decide later.",\`<button class="bt pr" data-a="nav" data-i="discover">Discover events</button>\`))},
 calendar(){if(S.load)return skel(2);const items=d=>{const o=[],c=dow(d)>0&&dow(d)<6?CLS[dow(d)]||{}:{};for(const h in c)o.push({k:"class",l:c[h],s:+h,e:+h+1});EV.filter(e=>e.date===d).forEach(e=>{const k=S.reg[e.id]==="Registered"?"reg":S.saved.has(e.id)?"saved":recList().includes(e)?"rec":null;if(k)o.push({k,l:e.title,s:e.s,e:e.e})});return o.sort((a,b)=>a.s-b.s)},
  col={class:"#64748b",reg:"var(--ok)",rec:"var(--p)",saved:"var(--wn)"},ln=i=>\`<div class="it" style="border-color:\${col[i.k]}">\${fmt(i.s)}–\${fmt(i.e)} \${i.l}</div>\`,cd=S.cd,D=new Date(cd+"T00:00"),iso=x=>x.toISOString().slice(0,10).replace(/./,c=>c),
  add=(x,n)=>{const y=new Date(x);y.setDate(y.getDate()+n);return new Date(y.getTime()-y.getTimezoneOffset()*6e4).toISOString().slice(0,10)};let body="";
- if(S.cv==="month"){const f=new Date(2026,9,1).getDay(),n=31;body=\`<div class="cal">\${"SMTWTFS".split("").map(x=>\`<div class="h">\${x}</div>\`).join("")}\${"<div class=h></div>".repeat(f)}\${Array.from({length:n},(_,i)=>{const d="2026-10-"+String(i+1).padStart(2,"0");return\`<div class="\${d===TODAY?"td":""}" data-a="day" data-i="\${d}">\${i+1}<br>\${[...new Set(items(d).map(x=>x.k))].map(k=>\`<span class="d k-\${k}"></span>\`).join("")}</div>\`}).join("")}</div>\`}
+ if(S.cv==="month"){const my=+S.cm.slice(0,4),mm=+S.cm.slice(5,7),f=new Date(my,mm-1,1).getDay(),n=new Date(my,mm,0).getDate(),lbl=new Date(my,mm-1,1).toLocaleDateString("en-US",{month:"long",year:"numeric"});body=\`<div class="row" style="justify-content:space-between;margin-bottom:10px"><button class="bt" data-a="calprev">‹ Prev</button><b>\${lbl}</b><div class="row"><button class="bt" data-a="caltoday">Today</button><button class="bt" data-a="calnext">Next ›</button></div></div><div class="cal">\${"SMTWTFS".split("").map(x=>\`<div class="h">\${x}</div>\`).join("")}\${"<div class=h></div>".repeat(f)}\${Array.from({length:n},(_,i)=>{const d=S.cm+"-"+String(i+1).padStart(2,"0");return\`<div class="\${d===TODAY?"td":""}" data-a="day" data-i="\${d}" title="\${esc(items(d).filter(x=>x.k!=="class").map(x=>x.l).join(", "))}">\${i+1}<br>\${[...new Set(items(d).map(x=>x.k))].map(k=>\`<span class="d k-\${k}"></span>\`).join("")}</div>\`}).join("")}</div>\`}
  else if(S.cv==="week"){const m=add(cd,-((dow(cd)+6)%7));body=\`<div class="wk">\${Array.from({length:7},(_,i)=>{const d=add(m,i);return\`<div class="card pad"><b>\${new Date(d+"T00:00").toLocaleDateString("en-US",{weekday:"short",day:"numeric"})}</b>\${items(d).map(ln).join("")||"<div class=mu>Free</div>"}</div>\`}).join("")}</div>\`}
  else body=\`<div class="card pad"><b>\${dt(cd)}</b>\${items(cd).map(ln).join("")||"<p class=mu>Nothing scheduled. Free day.</p>"}</div>\`;
- return\`<h1>📅 My Calendar</h1><p class="sub">Your timetable from onboarding, with registered, saved and recommended events.</p><div class="row" style="margin-bottom:12px">\${["month","week","day"].map(x=>\`<button class="bt \${S.cv===x?"pr":""}" data-a="calv" data-i="\${x}">\${x[0].toUpperCase()+x.slice(1)}</button>\`).join("")}<span class="mu"><span class="d k-class"></span>Classes <span class="d k-reg"></span>Registered <span class="d k-rec"></span>Recommended <span class="d k-saved"></span>Saved</span></div>\${body}\`},
+ return\`<h1>📅 My Calendar</h1><p class="sub">Your official class timetable, with registered, saved and recommended events.</p><div class="row" style="margin-bottom:12px">\${["month","week","day"].map(x=>\`<button class="bt \${S.cv===x?"pr":""}" data-a="calv" data-i="\${x}">\${x[0].toUpperCase()+x.slice(1)}</button>\`).join("")}<span class="mu"><span class="d k-class"></span>Classes <span class="d k-reg"></span>Registered <span class="d k-rec"></span>Recommended <span class="d k-saved"></span>Saved</span></div>\${body}\`},
 profile(){const ed=S.edit,ch=(k,t)=>\`<div style="margin:10px 0"><b>\${t}</b><br>\${P[k].map((x,i)=>\`<span class="chip">\${x}\${ed?\`<button data-a="rmc" data-k="\${k}" data-i="\${i}" aria-label="Remove \${x}">✕</button>\`:""}</span>\`).join("")}\${ed?\`<input data-add="\${k}" placeholder="Add + Enter" style="background:var(--c2);border:1px solid var(--bd);border-radius:10px;padding:3px 8px">\`:""}</div>\`;
  const days=["Mon","Tue","Wed","Thu","Fri"];
- return\`<div class="sh"><h1>My Profile</h1><button class="bt \${ed?"pr":""}" data-a="edit">\${ed?"Save Profile":"Edit Profile"}</button></div><div class="card pad"><div class="row"><div class="av" style="width:56px;height:56px;font-size:20px">\${P.initials}</div><div><div class="t">\${P.name}</div><div class="mu">\${P.email}</div></div></div><p>🏫 \${P.college} · \${P.dept} · \${P.year}</p>\${ch("interests","Interests")}\${ch("skills","Skills")}\${ch("goals","Career Goals")}\${ch("domains","Preferred Domains")}</div><br>
-<div class="card pad"><div class="sh"><b>Weekly Timetable (Mon–Fri)</b><button class="bt" data-a="editTT">\${S.editTT?"Done":"Edit Timetable"}</button></div><p class="mu">\${S.editTT?"Tap a slot to mark it as a class or free.":"Collected during onboarding. Used for availability matching."}</p><div class="tt"><div></div>\${days.map(d=>\`<div>\${d}</div>\`).join("")}\${TT_SLOTS.map(slot=>\`<div>\${fmt(slot.s)+" – "+fmt(slot.e)}</div>\${[1,2,3,4,5].map(d=>{const block=(TTBLOCKS[d]||[]).find(b=>b.s<slot.e-0.001&&b.e>slot.s+0.001);return \`<div class="\${block?(block.t&&["lunch","break","personal","travel"].indexOf(block.t)>=0?"b br":"b"):""} \${S.editTT?"e":""}" data-a="slot" data-d="\${d}" data-i="\${slot.s}">\${block?(String(block.label).replace(/[<>&]/g,"")+"<br><small>"+fmt(block.s)+" - "+fmt(block.e)+"</small>"):"Free"}</div>\`;}).join("")}\`).join("")}</div></div>\`},
+ return\`<div class="sh"><h1>My Profile</h1><button class="bt \${ed?"pr":""}" data-a="edit">\${ed?"Save Profile":"Edit Profile"}</button></div><div class="card pad"><div class="row"><div class="av" style="width:56px;height:56px;font-size:20px">\${P.initials}</div><div><div class="t">\${P.name}</div><div class="mu">\${P.email}</div></div></div><p><button class="bt" data-a="idqr">🪪 My Student QR</button></p><p>🏫 \${P.college} · \${P.dept} · \${P.year}</p>\${ch("interests","Interests")}\${ch("skills","Skills")}\${ch("goals","Career Goals")}\${ch("domains","Preferred Domains")}</div><br>
+<div class="card pad"><div class="sh"><b>Weekly Timetable (Mon–Fri)</b><button class="bt" data-a="editTT">\${S.editTT?"Done":"My class and timetable"}</button></div><p class="mu">\${S.editTT?"Tap a slot to mark it as a class or free.":"Your official class timetable from your university. Used for availability matching."}</p><div class="tt"><div></div>\${days.map(d=>\`<div>\${d}</div>\`).join("")}\${TT_SLOTS.map(slot=>\`<div>\${fmt(slot.s)+" – "+fmt(slot.e)}</div>\${[1,2,3,4,5].map(d=>{const block=(TTBLOCKS[d]||[]).find(b=>b.s<slot.e-0.001&&b.e>slot.s+0.001);return \`<div class="\${block?(block.t&&["lunch","break","personal","travel"].indexOf(block.t)>=0?"b br":"b"):""} \${S.editTT?"e":""}" data-a="slot" data-d="\${d}" data-i="\${slot.s}">\${block?(String(block.label).replace(/[<>&]/g,"")+"<br><small>"+fmt(block.s)+" - "+fmt(block.e)+"</small>"):"Free"}</div>\`;}).join("")}\`).join("")}</div></div>\`},
 notifications(){const u=S.notes.filter(n=>!n.r).length;return\`<div class="sh"><h1>Notifications</h1><button class="bt" data-a="markall">Mark all as read</button></div><p class="sub">\${u} unread</p>\`+S.notes.map((n,i)=>\`<div class="card pad row \${n.r?"":"un"}" style="margin-bottom:8px;justify-content:space-between"><div>\${n.r?"":"● "}\${n.t}<div class="mu" style="font-size:12px">\${n.w}</div></div>\${n.r?"":\`<button class="bt" data-a="read" data-i="\${i}">Mark as read</button>\`}</div>\`).join("")},
-settings(){return\`<h1>Settings</h1><div class="card pad"><div class="tg"><div>Auto-refresh recommendations<div class="mu">Polling every \${S.poll}s. SSE/WebSocket can replace this later (not implemented).</div></div><button class="bt" data-a="poll">\${S.poll?"On":"Off"}</button></div><div class="tg"><div>Notify me about new matching events<div class="mu">Push notifications</div></div><button class="bt" data-a="toast" data-i="Preference saved">On</button></div><div class="tg"><div>Demo: simulate API failure<div class="mu">Shows error states with Retry</div></div><button class="bt" data-a="fail">\${S.fail?"On":"Off"}</button></div><div class="tg"><div>Interaction signals collected<div class="mu">views, saves, registrations, 👍/👎 (sent to recommendation API)</div></div><b>\${S.sig.length}</b></div></div>\`}};
+settings(){return\`<h1>Settings</h1><div class="card pad"><h3 style="margin:0 0 6px">Appearance</h3><div class="tg"><div>Theme<div class="mu">Choose your preferred dashboard appearance.</div></div><select id="themeSelect" class="bt" style="min-width:140px;background:var(--c2);color:var(--tx);border:1px solid var(--bd);padding:8px 12px"><option value="dark" \${document.documentElement.getAttribute("data-theme")!=="light"?"selected":""}>Dark Mode</option><option value="light" \${document.documentElement.getAttribute("data-theme")==="light"?"selected":""}>Light Mode</option></select></div></div><div class="card pad" style="margin-top:12px"><div class="tg"><div>Auto-refresh recommendations<div class="mu">Polling every \${S.poll}s. SSE/WebSocket can replace this later (not implemented).</div></div><button class="bt" data-a="poll">\${S.poll?"On":"Off"}</button></div><div class="tg"><div>Notify me about new matching events<div class="mu">Push notifications</div></div><button class="bt" data-a="toast" data-i="Preference saved">On</button></div><div class="tg"><div>Demo: simulate API failure<div class="mu">Shows error states with Retry</div></div><button class="bt" data-a="fail">\${S.fail?"On":"Off"}</button></div><div class="tg"><div>Interaction signals collected<div class="mu">views, saves, registrations, 👍/👎 (sent to recommendation API)</div></div><b>\${S.sig.length}</b></div></div>\`}};
+
 /* ---- shell ---- */
 function render(){const v=S.view;$("#main").innerHTML=v==="detail"?V.detail():V[v]\();
  const on=v==="detail"?"discover":v;$("#side").innerHTML=\`<div class="logo"><b>CampusPath</b> AI</div>\`+NAV.map(n=>\`<button class="nv \${on===n[0]?"on":""}" data-a="nav" data-i="\${n[0]}">\${n[1]} \${n[2]}</button>\`).join("")+\`<button class="nv" data-a="logout">🚪 Logout</button>\`;
@@ -938,15 +1032,17 @@ function modal(h){$("#modal").innerHTML=h?\`<div class="mo" data-a="close"><div 
 document.addEventListener("click",ev=>{const t=ev.target.closest("[data-a]");if(!t)return;const a=t.dataset.a,i=t.dataset.i,id=i;
  if(t.classList.contains("mo")&&ev.target!==t)return;
  if(!ev.target.closest(".sr"))$("#drop").hidden=true;
- const A={nav:()=>go(i),menu:()=>$("#side").classList.toggle("open"),pm:()=>{$("#pm").innerHTML=\`<button class="nv" data-a="nav" data-i="profile">👤 My Profile</button><button class="nv" data-a="nav" data-i="settings">⚙️ Settings</button><button class="nv" data-a="logout">🚪 Logout</button>\`;$("#pm").hidden=!$("#pm").hidden},
+ const A={nav:()=>go(i),menu:()=>$("#side").classList.toggle("open"),pm:()=>{$("#pm").innerHTML=\`<button class="nv" data-a="nav" data-i="profile">👤 My Profile</button><button class="nv" data-a="idqr">🪪 My Student QR</button><button class="nv" data-a="nav" data-i="settings">⚙️ Settings</button><button class="nv" data-a="logout">🚪 Logout</button>\`;$("#pm").hidden=!$("#pm").hidden},
  logout:()=>{$("#pm").hidden=true;modal(\`<h2>Log out?</h2><p class="mu">You will need to log in again to access your dashboard.</p><div class="row"><button class="bt" data-a="close">Cancel</button><button class="bt pr" data-a="dologout">Logout</button></div>\`)},
- view:()=>{api.signal(id,"view");go("detail",id)},back:()=>go("dashboard"),close:()=>modal(""),dologout:()=>{modal("");parent.postMessage({type:"CAMPUSPATH_LOGOUT"},"*")},
- reg:()=>{const e=E(id);modal(\`<h2>Register for:</h2><div class="t">\${e.title}</div><p class="mu">\${dt(e.date)} \${tr(e)}<br>\${e.venue}</p>\${avail(e).free?"":\`<p class="wn">⚠ This overlaps with \${avail(e).clash}.</p>\`}<div class="row"><button class="bt" data-a="close">Cancel</button><button class="bt pr" data-a="confirm" data-i="\${id}">Confirm Registration</button></div>\`)},
+ eqr:()=>{window.parent.postMessage({type:"CAMPUSPATH_OPEN_EVENT_QR",eventId:id},"*")},idqr:()=>{$("#pm").hidden=true;window.parent.postMessage({type:"CAMPUSPATH_OPEN_IDENTITY_QR"},"*")},view:()=>{api.signal(id,"view");go("detail",id)},back:()=>go("dashboard"),close:()=>modal(""),dologout:()=>{modal("");parent.postMessage({type:"CAMPUSPATH_LOGOUT"},"*")},
+ reg:()=>{const e=E(id);if(e&&e.reg_required===false){toast("Registration is not required for this event");return;}if(e&&closedE(e)){toast("Registration is closed for this event");return;}modal(\`<h2>Register for:</h2><div class="t">\${e.title}</div><p class="mu">\${dt(e.date)} \${tr(e)}<br>\${e.venue}</p>\${avail(e).free?"":\`<p class="wn">⚠ This overlaps with \${avail(e).clash}.</p>\`}<div class="row"><button class="bt" data-a="close">Cancel</button><button class="bt pr" data-a="confirm" data-i="\${id}">Confirm Registration</button></div>\`)},
  confirm:async()=>{
   const token=localStorage.getItem("token");
   if(!token){toast("Please login again");return;}
   const e=E(id);
   if(!e){toast("Event not found");return;}
+  if(e.reg_required===false){toast("Registration is not required for this event");return;}
+  if(closedE(e)){toast("Registration is closed for this event");return;}
   try{
     const response=await fetch(\`http\://127.0.0.1:8000/api/events/\${id}/register\`,{
       method:"POST",
@@ -1018,23 +1114,74 @@ save:async()=>{
   }
 },
  up:()=>{api.signal(id,"interested");toast("Thanks, we'll show more like this")},
- down:()=>{api.signal(id,"not_interested");S.hid.add(id);toast("Got it, we'll show fewer like this");if(S.view==="detail")go("dashboard");else render()},
+ down:async()=>{
+  const h=authHeaders();
+  if(!h){toast("Please login again");return;}
+  const src=S.view==="detail"?"event_details":(S.view==="dashboard"||S.view==="recommended"?"dashboard_recommended":"events_list");
+  try{
+    const r=await fetch(HIDE_API+"/api/events/"+id+"/not-interested",{method:"POST",headers:h,body:JSON.stringify({source:src})});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(d.detail||d.message||"Unable to hide this event");
+    S.hid.add(id);
+    toastUndo("Hidden from your recommendations.",id);
+    loadHidden();
+    if(S.view==="detail")go("dashboard");else render();
+  }catch(error){
+    console.error("Not interested error:",error);
+    toast(error.message||"Unable to hide this event");
+  }
+},
+ undoDown:async()=>{
+  const h=authHeaders();
+  if(!h){toast("Please login again");return;}
+  try{
+    const r=await fetch(HIDE_API+"/api/events/"+id+"/not-interested",{method:"DELETE",headers:h});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(d.detail||d.message||"Unable to restore this event");
+    S.hid.delete(id);
+    toast("Restored. It can appear in your recommendations again.");
+    loadHidden();render();
+  }catch(error){
+    console.error("Undo not interested error:",error);
+    toast(error.message||"Unable to restore this event");
+  }
+},
+ undoAll:async()=>{
+  const h=authHeaders();
+  if(!h){toast("Please login again");return;}
+  try{
+    const r=await fetch(HIDE_API+"/api/me/not-interested",{method:"DELETE",headers:h});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(d.detail||d.message||"Unable to restore events");
+    S.hid=new Set();S.hidList=[];
+    toast("All hidden events restored");
+    render();
+  }catch(error){
+    console.error("Undo all error:",error);
+    toast(error.message||"Unable to restore events");
+  }
+},
  retry:()=>{S.fail=false;go(S.view)},hideCold:()=>{S.cold=false;render()},cat:()=>{S.cat=i;S.f={};go("discover")},clear:()=>{S.cat="";S.q="";S.f={};$("#q").value="";render()},tab:()=>{S.tab=i;render()},
- calv:()=>{S.cv=i;render()},day:()=>{S.cd=i;S.cv="day";render()},edit:()=>{S.edit=!S.edit;if(!S.edit)toast("Profile saved");render()},editTT:()=>{window.parent.postMessage({type:"CAMPUSPATH_EDIT_TIMETABLE"},"*")},
+ calv:()=>{S.cv=i;render()},day:()=>{S.cd=i;S.cm=i.slice(0,7);S.cv="day";render()},calprev:()=>{const d=new Date(+S.cm.slice(0,4),+S.cm.slice(5,7)-2,1);S.cm=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");render()},calnext:()=>{const d=new Date(+S.cm.slice(0,4),+S.cm.slice(5,7),1);S.cm=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");render()},caltoday:()=>{S.cm=TODAY.slice(0,7);S.cd=TODAY;render()},edit:()=>{S.edit=!S.edit;if(!S.edit)toast("Profile saved");render()},editTT:()=>{window.parent.postMessage({type:"CAMPUSPATH_EDIT_TIMETABLE"},"*")},
  rmc:()=>{P[t.dataset.k].splice(id,1);refresh();render()},slot:()=>{if(!S.editTT)return;const d=+t.dataset.d;CLS[d]=CLS[d]||{};CLS[d][id]?delete CLS[d][id]:CLS[d][id]="Class";refresh();render()},
  read:()=>{S.notes[id].r=1;render()},markall:()=>{S.notes.forEach(n=>n.r=1);render()},poll:()=>{S.poll=S.poll?0:30;render()},fail:()=>{S.fail=!S.fail;render()},toast:()=>toast(i)};A[a]&&A[a]\()});
 document.addEventListener("change",e=>{const f=e.target.dataset.f;if(f){S.f[f]=e.target.type==="checkbox"?e.target.checked:e.target.value;render()}});
+/* Theme: apply the saved choice on load, and save changes */
+try{const savedTheme=localStorage.getItem("campuspath_theme");if(savedTheme==="light"){document.documentElement.setAttribute("data-theme","light");document.body.setAttribute("data-theme","light");}}catch(error){}
+document.addEventListener("change",e=>{if(e.target.id==="themeSelect"){const theme=e.target.value==="light"?"light":"dark";document.documentElement.setAttribute("data-theme",theme);document.body.setAttribute("data-theme",theme);try{localStorage.setItem("campuspath_theme",theme);}catch(error){}}});
 document.addEventListener("keydown",e=>{const k=e.target.dataset?.add;if(k&&e.key==="Enter"&&e.target.value.trim()){P[k].push(e.target.value.trim());refresh();render()}});
 $("#q").addEventListener("input",e=>{const q=e.target.value.toLowerCase(),d=$("#drop");if(!q){d.hidden=true;return}const l=up().filter(x=>[x.title,x.org,x.cat,x.venue,...x.skills].join(" ").toLowerCase().includes(q)).slice(0,5);d.innerHTML=l.map(x=>\`<div data-a="view" data-i="\${x.id}">\${x.em} \${x.title} <span class="mu">· \${x.org}</span></div>\`).join("")||"<div class=mu>No events found</div>";d.hidden=false});
 $("#q").addEventListener("keydown",e=>{if(e.key==="Enter"){S.q=e.target.value;S.cat="";$("#drop").hidden=true;go("discover")}});
 refresh();loadSavedTimetable();render();setTimeout(()=>{S.load=false;render()},450);S.load=true;render();
 setInterval(()=>{if(S.poll&&!S.fail){refresh();if(!S.load&&["dashboard","recommended"].includes(S.view))render()}},30000);/* swap for SSE/WebSocket later */
+/* Real notifications (e.g. registration deadline changes) are added on top of the existing list */
+(async()=>{try{const t=localStorage.getItem("token");if(!t)return;const r=await fetch("http://127.0.0.1:8000/api/student/notifications",{headers:{Authorization:"Bearer "+t}});if(!r.ok)return;const d=await r.json();(d.notifications||[]).slice().reverse().forEach(n=>S.notes.unshift({t:n.title+": "+n.message,w:new Date(n.created_at).toLocaleDateString("en-IN"),r:n.is_read?1:0}));if(typeof render==="function")render()}catch(e){}})();
 </script></body></html>
 `;
 
-function StudentDashboardUI({ student, events, recommendations, registrations, savedEventIds, timetable, onEditTimetable, onLogout }) {
+function StudentDashboardUI({ student, events, recommendations, registrations, savedEventIds, timetable, onEditTimetable, onLogout, onOpenIdentityQr, onOpenEventQr }) {
 
-  const frameRef = useRef(null);
+  const frameRef = useRef(null);
 
   useEffect(() => {
     const handleMessage = (event) => {
@@ -1045,18 +1192,24 @@ function StudentDashboardUI({ student, events, recommendations, registrations, s
       if (event.data?.type === "CAMPUSPATH_LOGOUT") {
         onLogout?.();
       }
+      if (event.data?.type === "CAMPUSPATH_OPEN_IDENTITY_QR") {
+        onOpenIdentityQr?.();
+      }
+      if (event.data?.type === "CAMPUSPATH_OPEN_EVENT_QR") {
+        onOpenEventQr?.(event.data.eventId);
+      }
     };
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [onEditTimetable, onLogout]);
+  }, [onEditTimetable, onLogout, onOpenIdentityQr, onOpenEventQr]);
 
 
 
-  useEffect(() => {
+  useEffect(() => {
 
-    const frame = frameRef.current;
+    const frame = frameRef.current;
 
-    if (!frame) return;
+    if (!frame) return;
 
     console.log(
   "FRONTEND RECOMMENDATIONS VALUES:",
@@ -1067,75 +1220,75 @@ function StudentDashboardUI({ student, events, recommendations, registrations, s
   )
 );
 
-    const payload = {
+    const payload = {
 
-      student,
+      student,
 
-      events: Array.isArray(events) ? events : [],
+      events: Array.isArray(events) ? events : [],
 
-      recommendations: Array.isArray(recommendations) ? recommendations : [],
+      recommendations: Array.isArray(recommendations) ? recommendations : [],
 
-      registrations: registrations || {},
+      registrations: registrations || {},
 
-      savedEventIds: Array.isArray(savedEventIds) ? savedEventIds : [],
+      savedEventIds: Array.isArray(savedEventIds) ? savedEventIds : [],
 
-      timetable: timetable || {},
+      timetable: timetable || {},
 
-    };
-
-
-
-    const send = () => {
-
-      frame.contentWindow?.postMessage(
-
-        { type: "CAMPUSPATH_DASHBOARD_DATA", payload },
-
-        "*"
-
-      );
-
-    };
+    };
 
 
 
-    frame.addEventListener("load", send);
+    const send = () => {
 
-    if (frame.contentDocument?.readyState === "complete") send();
+      frame.contentWindow?.postMessage(
 
-    return () => frame.removeEventListener("load", send);
+        { type: "CAMPUSPATH_DASHBOARD_DATA", payload },
 
-  }, [student, events, recommendations, registrations, savedEventIds, timetable]);
+        "*"
+
+      );
+
+    };
 
 
 
-  return (
+    frame.addEventListener("load", send);
 
-    <iframe
+    if (frame.contentDocument?.readyState === "complete") send();
 
-      ref={frameRef}
+    return () => frame.removeEventListener("load", send);
 
-      title="CampusPath AI Student Dashboard"
+  }, [student, events, recommendations, registrations, savedEventIds, timetable]);
 
-      srcDoc={DASHBOARD_HTML}
 
-      style={{
 
-        width: "100%",
+  return (
 
-        height: "100vh",
+    <iframe
 
-        minHeight: "760px",
+      ref={frameRef}
 
-        border: "0",
+      title="CampusPath AI Student Dashboard"
 
-        display: "block",
+      srcDoc={DASHBOARD_HTML}
 
-      }}
+      style={{
 
-    />
+        width: "100%",
 
-  );
+        height: "100vh",
+
+        minHeight: "760px",
+
+        border: "0",
+
+        display: "block",
+
+      }}
+
+    />
+
+  );
 
 }
 

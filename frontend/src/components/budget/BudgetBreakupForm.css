@@ -1,0 +1,172 @@
+/* Presidency University Budget Breakup Form.
+   Everything is scoped under .bbf so it cannot disturb other forms, and
+   the input rules are specific enough to beat global "input {width:100%}"
+   style rules in the dashboards' own stylesheets. */
+
+.bbf {
+  margin: 12px 0 20px;
+  color: var(--bbf-text, inherit);
+  text-align: left;
+}
+
+.bbf-head {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.bbf-univ {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.bbf-title {
+  margin-top: 2px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.bbf-note {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  font-style: italic;
+  opacity: 0.85;
+  text-align: left;
+}
+
+.bbf-legacy {
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  font-size: 12.5px;
+  border-radius: 8px;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  background: rgba(245, 158, 11, 0.12);
+}
+
+.bbf-scroll {
+  overflow-x: auto;
+}
+
+.bbf .bbf-table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  table-layout: fixed;
+  border: 1px solid var(--bbf-border, var(--border-color, var(--border, #293750)));
+}
+
+.bbf .bbf-col-particulars { width: 48%; }
+.bbf .bbf-col-qty { width: 18%; }
+.bbf .bbf-col-cost { width: 34%; }
+
+.bbf .bbf-table th,
+.bbf .bbf-table td {
+  padding: 6px 8px;
+  border: 1px solid var(--bbf-border, var(--border-color, var(--border, #293750)));
+  vertical-align: middle;
+  font-size: 13.5px;
+  text-align: left;
+}
+
+/* header row and the five category rows: grey bands, bold text */
+.bbf .bbf-table thead th,
+.bbf .bbf-category th {
+  background: rgba(148, 163, 184, 0.28);
+  font-weight: 700;
+}
+
+.bbf .bbf-category th {
+  letter-spacing: 0.01em;
+}
+
+/* checkbox sits immediately before the expense name */
+.bbf .bbf-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.bbf .bbf-table input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  margin: 0;
+  padding: 0;
+  flex: none;
+  accent-color: var(--accent-color, #6757f5);
+}
+
+.bbf .bbf-table input[type="checkbox"]:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.bbf .bbf-input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 6px 8px;
+  font-size: 13.5px;
+  border-radius: 6px;
+  border: 1px solid var(--bbf-border, var(--border-color, var(--border, #334155)));
+  background: var(--surface-input, #eaf1ff);
+  color: #172033;
+}
+
+.bbf .bbf-input:disabled {
+  opacity: 0.45;
+}
+
+.bbf .bbf-input[readonly] {
+  background: transparent;
+  color: inherit;
+  border-color: transparent;
+  padding-left: 0;
+}
+
+.bbf .bbf-spec {
+  margin-top: 6px;
+}
+
+.bbf .bbf-money {
+  text-align: right;
+}
+
+.bbf .bbf-pretty {
+  display: block;
+  margin-top: 2px;
+  font-size: 11.5px;
+  text-align: right;
+  opacity: 0.75;
+}
+
+.bbf .bbf-off .bbf-check span {
+  opacity: 0.8;
+}
+
+.bbf .bbf-total th,
+.bbf .bbf-total td {
+  font-weight: 800;
+  background: rgba(148, 163, 184, 0.14);
+}
+
+.bbf .bbf-total th {
+  text-align: center;
+  letter-spacing: 0.06em;
+}
+
+.bbf .bbf-total td {
+  text-align: right;
+  font-size: 15px;
+}
+
+.bbf .bbf-conf {
+  margin: 8px 0 0;
+  font-size: 12px;
+  opacity: 0.7;
+}

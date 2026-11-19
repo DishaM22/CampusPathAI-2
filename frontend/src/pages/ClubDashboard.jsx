@@ -5,6 +5,11 @@ import Sidebar from "../club/components/Sidebar";
 import TopBar from "../club/components/TopBar";
 import StatCard from "../club/components/StatCard";
 import EventCard from "../club/components/EventCard";
+import {
+  RequestModificationModal,
+  isLiveEvent,
+} from "../components/modifications/RequestModification";
+import MyModificationRequests from "../components/modifications/MyModificationRequests";
 
 import {
   EmptyState,
@@ -159,6 +164,7 @@ export default function ClubDashboard() {
   const [isSample, setIsSample] = useState(false);
 
   const [search, setSearch] = useState("");
+  const [modEvent, setModEvent] = useState(null);
 
 
   // ==========================================================
@@ -265,6 +271,12 @@ export default function ClubDashboard() {
       path === "/club-dashboard/events"
     ) {
       return "events";
+    }
+
+    if (
+      path === "/club-dashboard/edit-requests"
+    ) {
+      return "edit-requests";
     }
 
     if (
@@ -705,9 +717,11 @@ export default function ClubDashboard() {
                             }
 
                             onEdit={(selectedEvent) =>
-                              handleNavigate(
-                                `/club-dashboard/events/${selectedEvent.id}/edit`
-                              )
+                              isLiveEvent(selectedEvent)
+                                ? setModEvent(selectedEvent)
+                                : handleNavigate(
+                                    `/club-dashboard/events/${selectedEvent.id}/edit`
+                                  )
                             }
 
                             onRegistrations={(selectedEvent) =>
@@ -727,6 +741,15 @@ export default function ClubDashboard() {
                     {/* ===========================================
                         RECENT REGISTRATIONS
                     =========================================== */}
+
+                    {modEvent && (
+                      <RequestModificationModal
+                        event={modEvent}
+                        onClose={() => setModEvent(null)}
+                      />
+                    )}
+
+                    <MyModificationRequests />
 
                     <div className="section-head">
 

@@ -12,35 +12,49 @@ const API_URL = "http://127.0.0.1:8000";
 
 const roles = [
 
-  {
+  {
 
-    id: "student",
+    id: "student",
 
-    label: "Student",
+    label: "Student",
 
-    icon: "🎓",
+    icon: "🎓",
 
-  },
+  },
 
-  {
+  {
 
-    id: "club",
+    id: "club",
 
-    label: "Club Leader",
+    label: "Club Leader",
 
-    icon: "🏫",
+    icon: "🏫",
 
-  },
+  },
 
-  {
+  {
 
-    id: "intercollege",
+    id: "faculty",
 
-    label: "Inter-College",
+    label: "Faculty",
 
-    icon: "🌐",
+    icon: "👩‍🏫",
 
-  },
+  },
+
+    {
+    id: "hod",
+    label: "HOD",
+    icon: "🧑‍🏫",
+    route: "/hod/register",
+  },
+
+  {
+    id: "dean",
+    label: "Dean",
+    icon: "🏛️",
+    route: "/dean/register",
+  },
 
 ];
 
@@ -48,465 +62,435 @@ const roles = [
 
 function Register() {
 
-  const navigate = useNavigate();
+  const navigate = useNavigate();
 
 
 
-  // ============================================================
+  // ============================================================
 
-  // FORM STATES
+  // FORM STATES
 
-  // ============================================================
+  // ============================================================
 
 
 
-  const [role, setRole] = useState("student");
+  const [role, setRole] = useState("student");
 
 
 
-  const [name, setName] = useState("");
+  const [name, setName] = useState("");
 
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState("");
 
-  const [department, setDepartment] = useState("");
+  const [department, setDepartment] = useState("");
 
 
 
-  // ============================================================
+  // ============================================================
 
-  // CLUB LEADER DETAILS
+  // CLUB LEADER DETAILS
 
-  // ============================================================
+  // ============================================================
 
 
 
-  const [studentId, setStudentId] = useState("");
+  const [studentId, setStudentId] = useState("");
 
-  const [collegeName, setCollegeName] = useState("");
+  const [collegeName, setCollegeName] = useState("");
 
-  const [clubName, setClubName] = useState("");
+  const [clubName, setClubName] = useState("");
 
-  const [clubCategory, setClubCategory] = useState("");
+  const [clubCategory, setClubCategory] = useState("");
 
-  const [clubPosition, setClubPosition] = useState("");
+  const [clubPosition, setClubPosition] = useState("");
 
-  const [coordinatorName, setCoordinatorName] = useState("");
+  const [coordinatorName, setCoordinatorName] = useState("");
 
-  const [coordinatorEmail, setCoordinatorEmail] = useState("");
+  const [coordinatorEmail, setCoordinatorEmail] = useState("");
 
 
 
-  // ============================================================
+  // ============================================================
 
-  // INTER-COLLEGE DETAILS
+  // FACULTY DETAILS
 
-  // ============================================================
+  // ============================================================
 
 
 
-  const [interCollegeName, setInterCollegeName] = useState("");
+  const [facultyCollege, setFacultyCollege] = useState("");
 
-  const [interCollegeOrganization, setInterCollegeOrganization] = useState("");
+  const [facultyClubName, setFacultyClubName] = useState("");
 
-  const [interCollegeCategory, setInterCollegeCategory] = useState("");
+  const [facultyClubCategory, setFacultyClubCategory] = useState("");
 
-  const [interCollegePosition, setInterCollegePosition] = useState("");
 
-  const [interCollegeCoordinatorName, setInterCollegeCoordinatorName] = useState("");
 
-  const [interCollegeCoordinatorEmail, setInterCollegeCoordinatorEmail] = useState("");
 
 
 
-  const [password, setPassword] = useState("");
 
-  const [confirmPassword, setConfirmPassword] = useState("");
 
 
+  const [password, setPassword] = useState("");
 
-  // ============================================================
+  const [confirmPassword, setConfirmPassword] = useState("");
 
-  // OTP STATES
 
-  // ============================================================
 
+  // ============================================================
 
+  // OTP STATES
 
-  const [otp, setOtp] = useState("");
+  // ============================================================
 
-  const [otpSent, setOtpSent] = useState(false);
 
 
+  const [otp, setOtp] = useState("");
 
-  // ============================================================
+  const [otpSent, setOtpSent] = useState(false);
 
-  // UI STATES
 
-  // ============================================================
 
+  // ============================================================
 
+  // UI STATES
 
-  const [loading, setLoading] = useState(false);
+  // ============================================================
 
-  const [error, setError] = useState("");
 
-  const [message, setMessage] = useState("");
 
+  const [loading, setLoading] = useState(false);
 
+  const [error, setError] = useState("");
 
-  const [showPassword, setShowPassword] = useState(false);
+  const [message, setMessage] = useState("");
 
 
 
-  // ============================================================
+  const [showPassword, setShowPassword] = useState(false);
 
-  // SEND OTP
 
-  // ============================================================
 
+  // ============================================================
 
+  // SEND OTP
 
-  const handleRegister = async (e) => {
+  // ============================================================
 
-    e.preventDefault();
 
 
+  const handleRegister = async (e) => {
 
-    setError("");
+    e.preventDefault();
 
-    setMessage("");
 
 
+    setError("");
 
-    // ----------------------------------------------------------
+    setMessage("");
 
-    // BASIC VALIDATION
 
-    // ----------------------------------------------------------
 
+    // ----------------------------------------------------------
 
+    // BASIC VALIDATION
 
-    if (!name.trim()) {
+    // ----------------------------------------------------------
 
-      setError("Please enter your full name.");
 
-      return;
 
-    }
+    if (!name.trim()) {
 
+      setError("Please enter your full name.");
 
+      return;
 
-    if (!email.trim()) {
+    }
 
-      setError("Please enter your college email.");
 
-      return;
 
-    }
+    if (!email.trim()) {
 
+      setError("Please enter your college email.");
 
+      return;
 
-    if (!department.trim()) {
+    }
 
-      setError("Please enter your department.");
 
-      return;
 
-    }
+    if (!department.trim()) {
 
+      setError("Please enter your department.");
 
+      return;
 
-    // ==========================================================
+    }
 
-    // CLUB LEADER VALIDATION
 
-    // ==========================================================
 
+    // ==========================================================
 
+    // CLUB LEADER VALIDATION
 
-    if (role === "club") {
+    // ==========================================================
 
-      if (!studentId.trim()) {
 
-        setError("Please enter your Student ID / University ID.");
 
-        return;
+    if (role === "club") {
 
-      }
+      if (!studentId.trim()) {
 
+        setError("Please enter your Student ID / University ID.");
 
+        return;
 
-      if (!collegeName.trim()) {
+      }
 
-        setError("Please enter your college / university name.");
 
-        return;
 
-      }
+      if (!collegeName.trim()) {
 
+        setError("Please enter your college / university name.");
 
+        return;
 
-      if (!clubName.trim()) {
+      }
 
-        setError("Please enter your club name.");
 
-        return;
 
-      }
+      if (!clubName.trim()) {
 
+        setError("Please enter your club name.");
 
+        return;
 
-      if (!clubCategory.trim()) {
+      }
 
-        setError("Please select your club category.");
 
-        return;
 
-      }
+      if (!clubCategory.trim()) {
 
+        setError("Please select your club category.");
 
+        return;
 
-      if (!clubPosition.trim()) {
+      }
 
-        setError("Please select your position in the club.");
 
-        return;
 
-      }
+      if (!clubPosition.trim()) {
 
+        setError("Please select your position in the club.");
 
+        return;
 
-      if (!coordinatorName.trim()) {
+      }
 
-        setError("Please enter the faculty / club coordinator name.");
 
-        return;
 
-      }
+      if (!coordinatorName.trim()) {
 
+        setError("Please enter the faculty / club coordinator name.");
 
+        return;
 
-      if (!coordinatorEmail.trim()) {
+      }
 
-        setError("Please enter the faculty / coordinator email.");
 
-        return;
 
-      }
+      if (!coordinatorEmail.trim()) {
 
-    }
+        setError("Please enter the faculty / coordinator email.");
 
+        return;
 
+      }
 
-    // ==========================================================
+    }
 
-    // INTER-COLLEGE VALIDATION
 
-    // ==========================================================
 
+    // ==========================================================
 
+    // INTER-COLLEGE VALIDATION
 
-    if (role === "intercollege") {
+    // ==========================================================
 
-      if (!interCollegeName.trim()) {
 
-        setError("Please enter your college / university name.");
 
-        return;
+    if (role === "faculty") {
 
-      }
+      if (!facultyCollege.trim()) {
 
+        setError("Please enter your college / university name.");
 
+        return;
 
-      if (!interCollegeOrganization.trim()) {
+      }
 
-        setError("Please enter your organization / team name.");
 
-        return;
 
-      }
+      if (!facultyClubName.trim()) {
 
+        setError("Please enter the name of the club you supervise.");
 
+        return;
 
-      if (!interCollegeCategory.trim()) {
+      }
 
-        setError("Please select your club / organization category.");
 
-        return;
 
-      }
+      if (!facultyClubCategory.trim()) {
 
+        setError("Please select your club category.");
 
+        return;
 
-      if (!interCollegePosition.trim()) {
+      }
 
-        setError("Please select your position.");
+    }
 
-        return;
 
-      }
 
+    // ----------------------------------------------------------
 
+    // PASSWORD VALIDATION
 
-      if (!interCollegeCoordinatorName.trim()) {
+    // ----------------------------------------------------------
 
-        setError("Please enter the coordinator name.");
 
-        return;
 
-      }
+    if (!password) {
 
+      setError("Please enter a password.");
 
+      return;
 
-      if (!interCollegeCoordinatorEmail.trim()) {
+    }
 
-        setError("Please enter the coordinator email.");
 
-        return;
 
-      }
+    if (password.length < 6) {
 
-    }
+      setError("Password must contain at least 6 characters.");
 
+      return;
 
+    }
 
-    // ----------------------------------------------------------
 
-    // PASSWORD VALIDATION
 
-    // ----------------------------------------------------------
+    if (password !== confirmPassword) {
 
+      setError("Passwords do not match.");
 
+      return;
 
-    if (!password) {
+    }
 
-      setError("Please enter a password.");
 
-      return;
 
-    }
+    setLoading(true);
 
 
 
-    if (password.length < 6) {
+    try {
 
-      setError("Password must contain at least 6 characters.");
+      console.log("Sending OTP to:", email);
 
-      return;
 
-    }
 
+      const otpResponse = await fetch(
 
+        `${API_URL}/send-otp?email=${encodeURIComponent(email)}`,
 
-    if (password !== confirmPassword) {
+        {
 
-      setError("Passwords do not match.");
+          method: "POST",
 
-      return;
+        }
 
-    }
+      );
 
 
 
-    setLoading(true);
+      console.log("OTP response status:", otpResponse.status);
 
 
 
-    try {
+      const otpData = await otpResponse.json();
 
-      console.log("Sending OTP to:", email);
 
 
+      console.log("OTP response:", otpData);
 
-      const otpResponse = await fetch(
 
-        `${API_URL}/send-otp?email=${encodeURIComponent(email)}`,
 
-        {
+      if (!otpResponse.ok || !otpData.success) {
 
-          method: "POST",
+        setError(
 
-        }
+          otpData.message || "Unable to send OTP."
 
-      );
+        );
 
+        return;
 
+      }
 
-      console.log("OTP response status:", otpResponse.status);
 
 
+      // ========================================================
 
-      const otpData = await otpResponse.json();
+      // OTP SENT
 
+      // ========================================================
 
 
-      console.log("OTP response:", otpData);
 
+      setOtpSent(true);
 
 
-      if (!otpResponse.ok || !otpData.success) {
 
-        setError(
+      setMessage(
 
-          otpData.message || "Unable to send OTP."
+        "A 6-digit OTP has been sent to your email. Please check your inbox."
 
-        );
+      );
 
-        return;
+    } catch (error) {
 
-      }
+      console.error("OTP ERROR:", error);
 
 
 
-      // ========================================================
+      setError(
 
-      // OTP SENT
+        "Unable to connect to CampusPath AI server."
 
-      // ========================================================
+      );
 
+    } finally {
 
+      setLoading(false);
 
-      setOtpSent(true);
+    }
 
+  };
 
 
-      setMessage(
 
-        "A 6-digit OTP has been sent to your email. Please check your inbox."
+  // ============================================================
 
-      );
+  // VERIFY OTP + CREATE ACCOUNT
 
-    } catch (error) {
+  // ============================================================
 
-      console.error("OTP ERROR:", error);
 
 
-
-      setError(
-
-        "Unable to connect to CampusPath AI server."
-
-      );
-
-    } finally {
-
-      setLoading(false);
-
-    }
-
-  };
-
-
-
-  // ============================================================
-
-  // VERIFY OTP + CREATE ACCOUNT
-
-  // ============================================================
-
-
-
-    const handleVerifyAndCreate = async (e) => {
+    const handleVerifyAndCreate = async (e) => {
     e.preventDefault();
 
     setError("");
@@ -591,16 +575,11 @@ function Register() {
                 }
               : {}),
 
-            ...(role === "intercollege"
+            ...(role === "faculty"
               ? {
-                  college_name: interCollegeName.trim(),
-                  club_name: interCollegeOrganization.trim(),
-                  club_category: interCollegeCategory,
-                  position: interCollegePosition,
-                  coordinator_name:
-                    interCollegeCoordinatorName.trim(),
-                  coordinator_email:
-                    interCollegeCoordinatorEmail.trim().toLowerCase(),
+                  college_name: facultyCollege.trim(),
+                  club_name: facultyClubName.trim(),
+                  club_category: facultyClubCategory,
                 }
               : {}),
           }),
@@ -640,7 +619,7 @@ function Register() {
       // 3. CLUB / INTER-COLLEGE
       // ========================================================
 
-      if (role === "club" || role === "intercollege") {
+      if (role === "club" || role === "faculty") {
         setMessage(
           "Your organization account has been created and is pending administrator approval. You can log in after your application is approved."
         );
@@ -807,1983 +786,1797 @@ function Register() {
 
 // RETURN UI
 
-  // ============================================================
+  // ============================================================
 
 
 
-  return (
+  return (
 
-    <div className="auth-page">
+    <div className="auth-page">
 
 
 
-      {/* ======================================================
+      {/* ======================================================
 
-          LEFT SIDE
+          LEFT SIDE
 
-          ====================================================== */}
+          ====================================================== */}
 
 
 
-      <section className="auth-left">
+      <section className="auth-left">
 
 
 
-        <div>
+        <div>
 
 
 
-          {/* LOGO */}
+          {/* LOGO */}
 
 
 
-          <div className="logo">
+          <div className="logo">
 
 
 
-            <div className="logo-icon">
+            <div className="logo-icon">
 
-              CP
+              CP
 
-            </div>
+            </div>
 
 
 
-            <span>
+            <span>
 
-              CampusPath
+              CampusPath
 
-            </span>
+            </span>
 
 
 
-            <span className="logo-ai">
+            <span className="logo-ai">
 
-              AI
+              AI
 
-            </span>
+            </span>
 
 
 
-          </div>
+          </div>
 
 
 
 
 
-          {/* HERO CONTENT */}
+          {/* HERO CONTENT */}
 
 
 
-          <div className="hero-content">
+          <div className="hero-content">
 
 
 
-            <h1>
+            <h1>
 
-              Your campus.
+              Your campus.
 
-              <br />
+              <br />
 
-              Your opportunities.
+              Your opportunities.
 
-            </h1>
+            </h1>
 
 
 
-            <p>
+            <p>
 
-              Create your CampusPath AI account
+              Create your CampusPath AI account
 
-              and let intelligent recommendations
+              and let intelligent recommendations
 
-              help you discover events that match
+              help you discover events that match
 
-              your skills, interests and goals.
+              your skills, interests and goals.
 
-            </p>
+            </p>
 
 
 
 
 
-            {/* FEATURES */}
+            {/* FEATURES */}
 
 
 
-            <div className="feature-list">
+            <div className="feature-list">
 
 
 
-              <div className="feature">
+              <div className="feature">
 
 
 
-                <span className="feature-check">
+                <span className="feature-check">
 
-                  ✓
+                  ✓
 
-                </span>
+                </span>
 
 
 
-                Personalized event discovery
+                Personalized event discovery
 
 
 
-              </div>
+              </div>
 
 
 
 
 
-              <div className="feature">
+              <div className="feature">
 
 
 
-                <span className="feature-check">
+                <span className="feature-check">
 
-                  ✓
+                  ✓
 
-                </span>
+                </span>
 
 
 
-                AI-powered recommendations
+                AI-powered recommendations
 
 
 
-              </div>
+              </div>
 
 
 
 
 
-              <div className="feature">
+              <div className="feature">
 
 
 
-                <span className="feature-check">
+                <span className="feature-check">
 
-                  ✓
+                  ✓
 
-                </span>
+                </span>
 
 
 
-                Smart schedule matching
+                Smart schedule matching
 
 
 
-              </div>
+              </div>
 
 
 
-            </div>
+            </div>
 
 
 
 
 
-            {/* MATCH CARD */}
+            {/* MATCH CARD */}
 
 
 
-            <div className="match-card">
+            <div className="match-card">
 
 
 
-              <div className="match-header">
+              <div className="match-header">
 
 
 
-                <span>
+                <span>
 
-                  CAMPUSPATH AI
+                  CAMPUSPATH AI
 
-                </span>
+                </span>
 
 
 
-                <span className="match-score">
+                <span className="match-score">
 
-                  AI Powered
+                  AI Powered
 
-                </span>
+                </span>
 
 
 
-              </div>
+              </div>
 
 
 
 
 
-              <h3>
+              <h3>
 
-                Events that fit your path
+                Events that fit your path
 
-              </h3>
+              </h3>
 
 
 
 
 
-              <p>
+              <p>
 
-                Discover workshops, hackathons,
+                Discover workshops, hackathons,
 
-                seminars and campus activities
+                seminars and campus activities
 
-                selected for you.
+                selected for you.
 
-              </p>
+              </p>
 
 
 
 
 
-              <div className="match-points">
+              <div className="match-points">
 
 
 
-                <span>
+                <span>
 
-                  ✓ Based on your interests
+                  ✓ Based on your interests
 
-                </span>
+                </span>
 
 
 
-                <span>
+                <span>
 
-                  ✓ Based on your skills
+                  ✓ Based on your skills
 
-                </span>
+                </span>
 
 
 
-              </div>
+              </div>
 
 
 
-            </div>
+            </div>
 
 
 
-          </div>
+          </div>
 
 
 
-        </div>
+        </div>
 
 
 
 
 
-        {/* FOOTER */}
+        {/* FOOTER */}
 
 
 
-        <div className="auth-footer">
+        <div className="auth-footer">
 
 
 
-          Built for students, club leaders,
+          Built for students, club leaders,
 
-          inter-college organizers & university admins.
+          faculty & university admins.
 
 
 
-        </div>
+        </div>
 
 
 
-      </section>
+      </section>
 
 
 
 
 
-      {/* ======================================================
+      {/* ======================================================
 
-          RIGHT SIDE
+          RIGHT SIDE
 
-          ====================================================== */}
+          ====================================================== */}
 
 
 
-      <section className="auth-right">
+      <section className="auth-right">
 
 
 
-        <div className="auth-container">
+        <div className="auth-container">
 
 
 
-          {/* ==================================================
+          {/* ==================================================
 
-              REGISTRATION FORM
+              REGISTRATION FORM
 
-              ================================================== */}
+              ================================================== */}
 
 
 
-          {!otpSent ? (
+          {!otpSent ? (
 
 
 
-            <>
+            <>
 
 
 
-              {/* HEADING */}
+              {/* HEADING */}
 
 
 
-              <div className="auth-heading">
+              <div className="auth-heading">
 
 
 
-                <div>
+                <div>
 
 
 
-                  <h2>
+                  <h2>
 
-                    Create your account
+                    Create your account
 
-                  </h2>
+                  </h2>
 
 
 
-                  <p>
+                  <p>
 
-                    Join CampusPath AI and
+                    Join CampusPath AI and
 
-                    discover opportunities.
+                    discover opportunities.
 
-                  </p>
+                  </p>
 
 
 
-                </div>
+                </div>
 
 
 
-              </div>
+              </div>
 
 
 
 
 
-              {/* ROLE */}
+              {/* ROLE */}
 
 
 
-              <span className="role-label">
+              <span className="role-label">
 
-                I am registering as
+                I am registering as
 
-              </span>
+              </span>
 
 
 
 
 
-              <div className="role-grid">
+              <div className="role-grid">
 
 
 
-                {roles.map((item) => (
+                {roles.map((item) => (
 
 
 
-                  <button
+                  <button
 
-                    key={item.id}
+                    key={item.id}
 
-                    type="button"
+                    type="button"
 
-                    className={`role-button ${
+                    className={`role-button ${
 
-                      role === item.id
+                      role === item.id
 
-                        ? "active"
+                        ? "active"
 
-                        : ""
+                        : ""
 
-                    }`}
+                    }`}
 
-                    onClick={() => {
+                    onClick={() => {
+  if (item.route) {
+    navigate(item.route);
+    return;
+  }
 
-                      setRole(item.id);
+  setRole(item.id);
+  setError("");
+}}
 
-                      setError("");
+                  >
 
-                    }}
 
-                  >
 
+                    <span className="role-icon">
 
+                      {item.icon}
 
-                    <span className="role-icon">
+                    </span>
 
-                      {item.icon}
 
-                    </span>
 
+                    {item.label}
 
 
-                    {item.label}
 
+                  </button>
 
 
-                  </button>
 
+                ))}
 
 
-                ))}
 
+              </div>
 
 
-              </div>
 
 
 
+              {/* FORM */}
 
 
-              {/* FORM */}
 
+              <form
 
+                className="auth-form"
 
-              <form
+                onSubmit={handleRegister}
 
-                className="auth-form"
+              >
 
-                onSubmit={handleRegister}
 
-              >
 
+                {/* NAME */}
 
 
-                {/* NAME */}
 
+                <div className="input-group">
 
 
-                <div className="input-group">
 
+                  <label>
 
+                    Full name
 
-                  <label>
+                  </label>
 
-                    Full name
 
-                  </label>
 
+                  <input
 
+                    type="text"
 
-                  <input
+                    placeholder="Enter your full name"
 
-                    type="text"
+                    value={name}
 
-                    placeholder="Enter your full name"
+                    onChange={(e) =>
 
-                    value={name}
+                      setName(e.target.value)
 
-                    onChange={(e) =>
+                    }
 
-                      setName(e.target.value)
+                    required
 
-                    }
+                  />
 
-                    required
 
-                  />
 
+                </div>
 
 
-                </div>
 
 
 
+                {/* EMAIL */}
 
 
-                {/* EMAIL */}
 
+                <div className="input-group">
 
 
-                <div className="input-group">
 
+                  <label>
 
+                    College email
 
-                  <label>
+                  </label>
 
-                    College email
 
-                  </label>
 
+                  <input
 
+                    type="email"
 
-                  <input
+                    placeholder="you\@college.edu"
 
-                    type="email"
+                    value={email}
 
-                    placeholder="you\@college.edu"
+                    onChange={(e) =>
 
-                    value={email}
+                      setEmail(e.target.value)
 
-                    onChange={(e) =>
+                    }
 
-                      setEmail(e.target.value)
+                    required
 
-                    }
+                  />
 
-                    required
 
-                  />
 
+                </div>
 
 
-                </div>
 
 
 
+                {/* DEPARTMENT */}
 
 
-                {/* DEPARTMENT */}
 
+                <div className="input-group">
 
 
-                <div className="input-group">
 
+                  <label>
 
+                    Department
 
-                  <label>
+                  </label>
 
-                    Department
 
-                  </label>
 
+                  <input
 
+                    type="text"
 
-                  <input
+                    placeholder="e.g. Artificial Intelligence"
 
-                    type="text"
+                    value={department}
 
-                    placeholder="e.g. Artificial Intelligence"
+                    onChange={(e) =>
 
-                    value={department}
+                      setDepartment(
 
-                    onChange={(e) =>
+                        e.target.value
 
-                      setDepartment(
+                      )
 
-                        e.target.value
+                    }
 
-                      )
+                    required
 
-                    }
+                  />
 
-                    required
 
-                  />
 
+                </div>
 
 
-                </div>
 
 
 
+                {/* ==================================================
 
+                    CLUB LEADER DETAILS
 
-                {/* ==================================================
+                    ONLY SHOWN FOR CLUB LEADER
 
-                    CLUB LEADER DETAILS
+                    ================================================== */}
 
-                    ONLY SHOWN FOR CLUB LEADER
 
-                    ================================================== */}
 
+                {role === "club" && (
 
+                  <>
 
-                {role === "club" && (
 
-                  <>
 
+                    {/* STUDENT ID */}
 
 
-                    {/* STUDENT ID */}
 
+                    <div className="input-group">
 
 
-                    <div className="input-group">
 
+                      <label>
 
+                        Student ID / University ID
 
-                      <label>
+                      </label>
 
-                        Student ID / University ID
 
-                      </label>
 
+                      <input
 
+                        type="text"
 
-                      <input
+                        placeholder="Enter your student ID"
 
-                        type="text"
+                        value={studentId}
 
-                        placeholder="Enter your student ID"
+                        onChange={(e) =>
 
-                        value={studentId}
+                          setStudentId(
 
-                        onChange={(e) =>
+                            e.target.value
 
-                          setStudentId(
+                          )
 
-                            e.target.value
+                        }
 
-                          )
+                        required
 
-                        }
+                      />
 
-                        required
 
-                      />
 
+                    </div>
 
 
-                    </div>
 
 
 
+                    {/* COLLEGE / UNIVERSITY */}
 
 
-                    {/* COLLEGE / UNIVERSITY */}
 
+                    <div className="input-group">
 
 
-                    <div className="input-group">
 
+                      <label>
 
+                        College / University Name
 
-                      <label>
+                      </label>
 
-                        College / University Name
 
-                      </label>
 
+                      <input
 
+                        type="text"
 
-                      <input
+                        placeholder="Enter your college or university"
 
-                        type="text"
+                        value={collegeName}
 
-                        placeholder="Enter your college or university"
+                        onChange={(e) =>
 
-                        value={collegeName}
+                          setCollegeName(
 
-                        onChange={(e) =>
+                            e.target.value
 
-                          setCollegeName(
+                          )
 
-                            e.target.value
+                        }
 
-                          )
+                        required
 
-                        }
+                      />
 
-                        required
 
-                      />
 
+                    </div>
 
 
-                    </div>
 
 
 
+                    {/* CLUB NAME */}
 
 
-                    {/* CLUB NAME */}
 
+                    <div className="input-group">
 
 
-                    <div className="input-group">
 
+                      <label>
 
+                        Club Name
 
-                      <label>
+                      </label>
 
-                        Club Name
 
-                      </label>
 
+                      <input
 
+                        type="text"
 
-                      <input
+                        placeholder="e.g. AI & Robotics Club"
 
-                        type="text"
+                        value={clubName}
 
-                        placeholder="e.g. AI & Robotics Club"
+                        onChange={(e) =>
 
-                        value={clubName}
+                          setClubName(
 
-                        onChange={(e) =>
+                            e.target.value
 
-                          setClubName(
+                          )
 
-                            e.target.value
+                        }
 
-                          )
+                        required
 
-                        }
+                      />
 
-                        required
 
-                      />
 
+                    </div>
 
 
-                    </div>
 
 
 
+                    {/* CLUB CATEGORY */}
 
 
-                    {/* CLUB CATEGORY */}
 
+                    <div className="input-group">
 
 
-                    <div className="input-group">
 
+                      <label>
 
+                        Club Category
 
-                      <label>
+                      </label>
 
-                        Club Category
 
-                      </label>
 
+                      <select
 
+                        value={clubCategory}
 
-                      <select
+                        onChange={(e) =>
 
-                        value={clubCategory}
+                          setClubCategory(
 
-                        onChange={(e) =>
+                            e.target.value
 
-                          setClubCategory(
+                          )
 
-                            e.target.value
+                        }
 
-                          )
+                        required
 
-                        }
+                      >
 
-                        required
 
-                      >
 
+                        <option value="">
 
+                          Select club category
 
-                        <option value="">
+                        </option>
 
-                          Select club category
 
-                        </option>
 
+                        <option value="Technical">
 
+                          Technical
 
-                        <option value="Technical">
+                        </option>
 
-                          Technical
 
-                        </option>
 
+                        <option value="Cultural">
 
+                          Cultural
 
-                        <option value="Cultural">
+                        </option>
 
-                          Cultural
 
-                        </option>
 
+                        <option value="Sports">
 
+                          Sports
 
-                        <option value="Sports">
+                        </option>
 
-                          Sports
 
-                        </option>
 
+                        <option value="Entrepreneurship">
 
+                          Entrepreneurship
 
-                        <option value="Entrepreneurship">
+                        </option>
 
-                          Entrepreneurship
 
-                        </option>
 
+                        <option value="Social Service">
 
+                          Social Service
 
-                        <option value="Social Service">
+                        </option>
 
-                          Social Service
 
-                        </option>
 
+                        <option value="Academic">
 
+                          Academic
 
-                        <option value="Academic">
+                        </option>
 
-                          Academic
 
-                        </option>
 
+                        <option value="Other">
 
+                          Other
 
-                        <option value="Other">
+                        </option>
 
-                          Other
 
-                        </option>
 
+                      </select>
 
 
-                      </select>
 
+                    </div>
 
 
-                    </div>
 
 
 
+                    {/* POSITION */}
 
 
-                    {/* POSITION */}
 
+                    <div className="input-group">
 
 
-                    <div className="input-group">
 
+                      <label>
 
+                        Your Position in the Club
 
-                      <label>
+                      </label>
 
-                        Your Position in the Club
 
-                      </label>
 
+                      <select
 
+                        value={clubPosition}
 
-                      <select
+                        onChange={(e) =>
 
-                        value={clubPosition}
+                          setClubPosition(
 
-                        onChange={(e) =>
+                            e.target.value
 
-                          setClubPosition(
+                          )
 
-                            e.target.value
+                        }
 
-                          )
+                        required
 
-                        }
+                      >
 
-                        required
 
-                      >
 
+                        <option value="">
 
+                          Select your position
 
-                        <option value="">
+                        </option>
 
-                          Select your position
 
-                        </option>
 
+                        <option value="President">
 
+                          President
 
-                        <option value="President">
+                        </option>
 
-                          President
 
-                        </option>
 
+                        <option value="Vice President">
 
+                          Vice President
 
-                        <option value="Vice President">
+                        </option>
 
-                          Vice President
 
-                        </option>
 
+                        <option value="Secretary">
 
+                          Secretary
 
-                        <option value="Secretary">
+                        </option>
 
-                          Secretary
 
-                        </option>
 
+                        <option value="Treasurer">
 
+                          Treasurer
 
-                        <option value="Treasurer">
+                        </option>
 
-                          Treasurer
 
-                        </option>
 
+                        <option value="Event Coordinator">
 
+                          Event Coordinator
 
-                        <option value="Event Coordinator">
+                        </option>
 
-                          Event Coordinator
 
-                        </option>
 
+                        <option value="Core Member">
 
+                          Core Member
 
-                        <option value="Core Member">
+                        </option>
 
-                          Core Member
 
-                        </option>
 
+                        <option value="Other">
 
+                          Other
 
-                        <option value="Other">
+                        </option>
 
-                          Other
 
-                        </option>
 
+                      </select>
 
 
-                      </select>
 
+                    </div>
 
 
-                    </div>
 
 
 
+                    {/* COORDINATOR NAME */}
 
 
-                    {/* COORDINATOR NAME */}
 
+                    <div className="input-group">
 
 
-                    <div className="input-group">
 
+                      <label>
 
+                        Faculty / Club Coordinator Name
 
-                      <label>
+                      </label>
 
-                        Faculty / Club Coordinator Name
 
-                      </label>
 
+                      <input
 
+                        type="text"
 
-                      <input
+                        placeholder="Enter coordinator name"
 
-                        type="text"
+                        value={coordinatorName}
 
-                        placeholder="Enter coordinator name"
+                        onChange={(e) =>
 
-                        value={coordinatorName}
+                          setCoordinatorName(
 
-                        onChange={(e) =>
+                            e.target.value
 
-                          setCoordinatorName(
+                          )
 
-                            e.target.value
+                        }
 
-                          )
+                        required
 
-                        }
+                      />
 
-                        required
 
-                      />
 
+                    </div>
 
 
-                    </div>
 
 
 
+                    {/* COORDINATOR EMAIL */}
 
 
-                    {/* COORDINATOR EMAIL */}
 
+                    <div className="input-group">
 
 
-                    <div className="input-group">
 
+                      <label>
 
+                        Faculty / Coordinator Email
 
-                      <label>
+                      </label>
 
-                        Faculty / Coordinator Email
 
-                      </label>
 
+                      <input
 
+                        type="email"
 
-                      <input
+                        placeholder="coordinator\@college.edu"
 
-                        type="email"
+                        value={coordinatorEmail}
 
-                        placeholder="coordinator\@college.edu"
+                        onChange={(e) =>
 
-                        value={coordinatorEmail}
+                          setCoordinatorEmail(
 
-                        onChange={(e) =>
+                            e.target.value
 
-                          setCoordinatorEmail(
+                          )
 
-                            e.target.value
+                        }
 
-                          )
+                        required
 
-                        }
+                      />
 
-                        required
 
-                      />
 
+                    </div>
 
 
-                    </div>
 
+                  </>
 
+                )}
 
-                  </>
 
-                )}
 
 
 
+                {/* ======================================================
 
+                    FACULTY DETAILS
 
-                {/* ======================================================
+                    ONLY SHOWN WHEN FACULTY IS SELECTED
 
-                    INTER-COLLEGE DETAILS
+                    ====================================================== */}
 
-                    ONLY SHOWN WHEN INTER-COLLEGE IS SELECTED
 
-                    ====================================================== */}
 
+                {role === "faculty" && (
 
+                  <>
 
-                {role === "intercollege" && (
 
-                  <>
 
+                    {/* COLLEGE / UNIVERSITY */}
 
 
-                    {/* COLLEGE / UNIVERSITY */}
 
+                    <div className="input-group">
 
 
-                    <div className="input-group">
 
+                      <label>
 
+                        College / University Name
 
-                      <label>
+                      </label>
 
-                        College / University Name
 
-                      </label>
 
+                      <input
 
+                        type="text"
 
-                      <input
+                        placeholder="Enter your college or university"
 
-                        type="text"
+                        value={facultyCollege}
 
-                        placeholder="Enter your college or university"
+                        onChange={(e) =>
 
-                        value={interCollegeName}
+                          setFacultyCollege(e.target.value)
 
-                        onChange={(e) =>
+                        }
 
-                          setInterCollegeName(e.target.value)
+                        required
 
-                        }
+                      />
 
-                        required
 
-                      />
 
+                    </div>
 
 
-                    </div>
 
 
 
+                    {/* ORGANIZATION / TEAM */}
 
 
-                    {/* ORGANIZATION / TEAM */}
 
+                    <div className="input-group">
 
 
-                    <div className="input-group">
 
+                      <label>
 
+                        Club Name (the club you supervise)
 
-                      <label>
+                      </label>
 
-                        Organization / Team Name
 
-                      </label>
 
+                      <input
 
+                        type="text"
 
-                      <input
+                        placeholder="e.g. Cybersecurity Club"
 
-                        type="text"
+                        value={facultyClubName}
 
-                        placeholder="e.g. Cybersecurity Club"
+                        onChange={(e) =>
 
-                        value={interCollegeOrganization}
+                          setFacultyClubName(e.target.value)
 
-                        onChange={(e) =>
+                        }
 
-                          setInterCollegeOrganization(e.target.value)
+                        required
 
-                        }
+                      />
 
-                        required
 
-                      />
 
+                    </div>
 
 
-                    </div>
 
 
 
+                    {/* CLUB / ORGANIZATION CATEGORY */}
 
 
-                    {/* CLUB / ORGANIZATION CATEGORY */}
 
+                    <div className="input-group">
 
 
-                    <div className="input-group">
 
+                      <label>
 
+                        Club Category
 
-                      <label>
+                      </label>
 
-                        Club / Organization Category
 
-                      </label>
 
+                      <select
 
+                        value={facultyClubCategory}
 
-                      <select
+                        onChange={(e) =>
 
-                        value={interCollegeCategory}
+                          setFacultyClubCategory(e.target.value)
 
-                        onChange={(e) =>
+                        }
 
-                          setInterCollegeCategory(e.target.value)
+                        required
 
-                        }
+                      >
 
-                        required
 
-                      >
 
+                        <option value="">
 
+                          Select club category
 
-                        <option value="">
+                        </option>
 
-                          Select club category
 
-                        </option>
 
+                        <option value="Technical">
 
+                          Technical
 
-                        <option value="Technical">
+                        </option>
 
-                          Technical
 
-                        </option>
 
+                        <option value="Cultural">
 
+                          Cultural
 
-                        <option value="Cultural">
+                        </option>
 
-                          Cultural
 
-                        </option>
 
+                        <option value="Sports">
 
+                          Sports
 
-                        <option value="Sports">
+                        </option>
 
-                          Sports
 
-                        </option>
 
+                        <option value="Entrepreneurship">
 
+                          Entrepreneurship
 
-                        <option value="Entrepreneurship">
+                        </option>
 
-                          Entrepreneurship
 
-                        </option>
 
+                        <option value="Social Service">
 
+                          Social Service
 
-                        <option value="Social Service">
+                        </option>
 
-                          Social Service
 
-                        </option>
 
+                        <option value="Academic">
 
+                          Academic
 
-                        <option value="Academic">
+                        </option>
 
-                          Academic
 
-                        </option>
 
+                        <option value="Other">
 
+                          Other
 
-                        <option value="Other">
+                        </option>
 
-                          Other
 
-                        </option>
 
+                      </select>
 
 
-                      </select>
 
+                    </div>
 
 
-                    </div>
 
 
 
+                  </>
 
+                )}
 
-                    {/* POSITION */}
 
 
 
-                    <div className="input-group">
 
+                {/* PASSWORD */}
 
 
-                      <label>
 
-                        Your Position
+                <div className="input-group">
 
-                      </label>
 
 
+                  <label>
 
-                      <select
+                    Password
 
-                        value={interCollegePosition}
+                  </label>
 
-                        onChange={(e) =>
 
-                          setInterCollegePosition(e.target.value)
 
-                        }
+                  <div className="password-wrapper">
 
-                        required
 
-                      >
 
+                    <input
 
+                      type={
 
-                        <option value="">
+                        showPassword
 
-                          Select your position
+                          ? "text"
 
-                        </option>
+                          : "password"
 
+                      }
 
+                      placeholder="Create a password"
 
-                        <option value="President">
+                      value={password}
 
-                          President
+                      onChange={(e) =>
 
-                        </option>
+                        setPassword(
 
+                          e.target.value
 
+                        )
 
-                        <option value="Vice President">
+                      }
 
-                          Vice President
+                      required
 
-                        </option>
+                    />
 
 
 
-                        <option value="Secretary">
+                    <button
 
-                          Secretary
+                      type="button"
 
-                        </option>
+                      className="password-toggle"
 
+                      onClick={() =>
 
+                        setShowPassword(
 
-                        <option value="Treasurer">
+                          !showPassword
 
-                          Treasurer
+                        )
 
-                        </option>
+                      }
 
+                    >
 
 
-                        <option value="Event Coordinator">
 
-                          Event Coordinator
+                      {showPassword
 
-                        </option>
+                        ? "Hide"
 
+                        : "Show"}
 
 
-                        <option value="Core Member">
 
-                          Core Member
+                    </button>
 
-                        </option>
 
 
+                  </div>
 
-                        <option value="Other">
 
-                          Other
 
-                        </option>
+                </div>
 
 
 
-                      </select>
 
 
+                {/* CONFIRM PASSWORD */}
 
-                    </div>
 
 
+                <div className="input-group">
 
 
 
-                    {/* COORDINATOR NAME */}
+                  <label>
 
+                    Confirm password
 
+                  </label>
 
-                    <div className="input-group">
 
 
+                  <input
 
-                      <label>
+                    type="password"
 
-                        Coordinator Name
+                    placeholder="Confirm your password"
 
-                      </label>
+                    value={confirmPassword}
 
+                    onChange={(e) =>
 
+                      setConfirmPassword(
 
-                      <input
+                        e.target.value
 
-                        type="text"
+                      )
 
-                        placeholder="Enter coordinator name"
+                    }
 
-                        value={interCollegeCoordinatorName}
+                    required
 
-                        onChange={(e) =>
+                  />
 
-                          setInterCollegeCoordinatorName(e.target.value)
 
-                        }
 
-                        required
+                </div>
 
-                      />
 
 
 
-                    </div>
 
+                {/* ERROR */}
 
 
 
+                {error && (
 
-                    {/* COORDINATOR EMAIL */}
 
 
+                  <div className="error-message">
 
-                    <div className="input-group">
+                    {error}
 
+                  </div>
 
 
-                      <label>
 
-                        Coordinator Email
+                )}
 
-                      </label>
 
 
 
-                      <input
 
-                        type="email"
+                {/* SUCCESS MESSAGE */}
 
-                        placeholder="coordinator\@college.edu"
 
-                        value={interCollegeCoordinatorEmail}
 
-                        onChange={(e) =>
+                {message && (
 
-                          setInterCollegeCoordinatorEmail(e.target.value)
 
-                        }
 
-                        required
+                  <div className="success-message">
 
-                      />
+                    {message}
 
+                  </div>
 
 
-                    </div>
 
+                )}
 
 
-                  </>
 
-                )}
 
 
+                {/* SUBMIT */}
 
 
 
-                {/* PASSWORD */}
+                <button
 
+                  className="primary-button"
 
+                  type="submit"
 
-                <div className="input-group">
+                  disabled={loading}
 
+                >
 
 
-                  <label>
 
-                    Password
+                  {loading
 
-                  </label>
+                    ? "Sending OTP..."
 
+                    : "Continue with verification"}
 
 
-                  <div className="password-wrapper">
 
+                </button>
 
 
-                    <input
 
-                      type={
+              </form>
 
-                        showPassword
 
-                          ? "text"
 
-                          : "password"
 
-                      }
 
-                      placeholder="Create a password"
+              {/* LOGIN */}
 
-                      value={password}
 
-                      onChange={(e) =>
 
-                        setPassword(
+              <div className="auth-switch">
 
-                          e.target.value
 
-                        )
 
-                      }
+                Already have an account?
 
-                      required
 
-                    />
 
+                <Link to="/login">
 
+                  {" "}Log in
 
-                    <button
+                </Link>
 
-                      type="button"
 
-                      className="password-toggle"
 
-                      onClick={() =>
+              </div>
 
-                        setShowPassword(
 
-                          !showPassword
 
-                        )
+            </>
 
-                      }
 
-                    >
 
+          ) : (
 
 
-                      {showPassword
 
-                        ? "Hide"
+            /* =================================================
 
-                        : "Show"}
+               OTP VERIFICATION
 
+               ================================================= */
 
 
-                    </button>
 
+            <div className="otp-container">
 
 
-                  </div>
 
+              <div className="otp-icon">
 
+                ✉️
 
-                </div>
+              </div>
 
 
 
 
 
-                {/* CONFIRM PASSWORD */}
+              <h2>
 
+                Verify your email
 
+              </h2>
 
-                <div className="input-group">
 
 
 
-                  <label>
 
-                    Confirm password
+              <p>
 
-                  </label>
+                A 6-digit OTP has been sent to
 
+              </p>
 
 
-                  <input
 
-                    type="password"
 
-                    placeholder="Confirm your password"
 
-                    value={confirmPassword}
+              <div className="otp-email">
 
-                    onChange={(e) =>
+                {email}
 
-                      setConfirmPassword(
+              </div>
 
-                        e.target.value
 
-                      )
 
-                    }
 
-                    required
 
-                  />
+              <p>
 
+                Check your inbox and enter the 6-digit OTP
 
+                below to verify your email.
 
-                </div>
+              </p>
 
 
 
 
 
-                {/* ERROR */}
+              <form
 
+                onSubmit={
 
+                  handleVerifyAndCreate
 
-                {error && (
+                }
 
+              >
 
 
-                  <div className="error-message">
 
-                    {error}
+                <input
 
-                  </div>
+                  className="otp-input"
 
+                  type="text"
 
+                  inputMode="numeric"
 
-                )}
+                  maxLength="6"
 
+                  placeholder="000000"
 
+                  value={otp}
 
+                  onChange={(e) =>
 
+                    setOtp(
 
-                {/* SUCCESS MESSAGE */}
+                      e.target.value.replace(
 
+                        /\D/g,
 
+                        ""
 
-                {message && (
+                      )
 
+                    )
 
+                  }
 
-                  <div className="success-message">
+                  required
 
-                    {message}
+                />
 
-                  </div>
 
 
 
-                )}
 
+                {/* ERROR */}
 
 
 
+                {error && (
 
-                {/* SUBMIT */}
 
 
+                  <div className="error-message">
 
-                <button
+                    {error}
 
-                  className="primary-button"
+                  </div>
 
-                  type="submit"
 
-                  disabled={loading}
 
-                >
+                )}
 
 
 
-                  {loading
 
-                    ? "Sending OTP..."
 
-                    : "Continue with verification"}
+                {/* MESSAGE */}
 
 
 
-                </button>
+                {message && (
 
 
 
-              </form>
+                  <div className="success-message">
 
+                    {message}
 
+                  </div>
 
 
 
-              {/* LOGIN */}
+                )}
 
 
 
-              <div className="auth-switch">
 
 
+                {/* VERIFY */}
 
-                Already have an account?
 
 
+                <button
 
-                <Link to="/login">
+                  className="primary-button"
 
-                  {" "}Log in
+                  type="submit"
 
-                </Link>
+                  disabled={
 
+                    loading ||
 
+                    otp.length !== 6
 
-              </div>
+                  }
 
+                >
 
 
-            </>
 
+                  {loading
 
+                    ? "Creating account..."
 
-          ) : (
+                    : "Verify & Create Account"}
 
 
 
-            /* =================================================
+                </button>
 
-               OTP VERIFICATION
 
-               ================================================= */
 
+              </form>
 
 
-            <div className="otp-container">
 
 
 
-              <div className="otp-icon">
+              {/* EDIT DETAILS */}
 
-                ✉️
 
-              </div>
 
+              <div className="otp-actions">
 
 
 
+                <button
 
-              <h2>
+                  className="otp-secondary"
 
-                Verify your email
+                  type="button"
 
-              </h2>
+                  onClick={() => {
 
 
 
+                    setOtpSent(false);
 
+                    setOtp("");
 
-              <p>
+                    setError("");
 
-                A 6-digit OTP has been sent to
+                    setMessage("");
 
-              </p>
 
 
+                  }}
 
+                >
 
 
-              <div className="otp-email">
 
-                {email}
+                  ← Edit details
 
-              </div>
 
 
+                </button>
 
 
 
-              <p>
+              </div>
 
-                Check your inbox and enter the 6-digit OTP
 
-                below to verify your email.
 
-              </p>
+            </div>
 
 
 
+          )}
 
 
-              <form
 
-                onSubmit={
+        </div>
 
-                  handleVerifyAndCreate
 
-                }
 
-              >
+      </section>
 
 
 
-                <input
+    </div>
 
-                  className="otp-input"
-
-                  type="text"
-
-                  inputMode="numeric"
-
-                  maxLength="6"
-
-                  placeholder="000000"
-
-                  value={otp}
-
-                  onChange={(e) =>
-
-                    setOtp(
-
-                      e.target.value.replace(
-
-                        /\D/g,
-
-                        ""
-
-                      )
-
-                    )
-
-                  }
-
-                  required
-
-                />
-
-
-
-
-
-                {/* ERROR */}
-
-
-
-                {error && (
-
-
-
-                  <div className="error-message">
-
-                    {error}
-
-                  </div>
-
-
-
-                )}
-
-
-
-
-
-                {/* MESSAGE */}
-
-
-
-                {message && (
-
-
-
-                  <div className="success-message">
-
-                    {message}
-
-                  </div>
-
-
-
-                )}
-
-
-
-
-
-                {/* VERIFY */}
-
-
-
-                <button
-
-                  className="primary-button"
-
-                  type="submit"
-
-                  disabled={
-
-                    loading ||
-
-                    otp.length !== 6
-
-                  }
-
-                >
-
-
-
-                  {loading
-
-                    ? "Creating account..."
-
-                    : "Verify & Create Account"}
-
-
-
-                </button>
-
-
-
-              </form>
-
-
-
-
-
-              {/* EDIT DETAILS */}
-
-
-
-              <div className="otp-actions">
-
-
-
-                <button
-
-                  className="otp-secondary"
-
-                  type="button"
-
-                  onClick={() => {
-
-
-
-                    setOtpSent(false);
-
-                    setOtp("");
-
-                    setError("");
-
-                    setMessage("");
-
-
-
-                  }}
-
-                >
-
-
-
-                  ← Edit details
-
-
-
-                </button>
-
-
-
-              </div>
-
-
-
-            </div>
-
-
-
-          )}
-
-
-
-        </div>
-
-
-
-      </section>
-
-
-
-    </div>
-
-  );
+  );
 
 }
 

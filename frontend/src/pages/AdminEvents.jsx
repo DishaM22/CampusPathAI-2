@@ -2,6 +2,20 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import Sidebar from "../admin/components/Sidebar";
+import BudgetBreakupForm from "../components/budget/BudgetBreakupForm";
+import {
+  breakupFromEvent,
+  hasSavedBreakup,
+} from "../components/budget/budgetUtils";
+import {
+  formatDeadline,
+  isRegistrationRequired,
+  registrationLabel,
+} from "../components/registration/RegistrationRequirement";
+import AdminDeadlineRequests from "../components/registration/AdminDeadlineRequests";
+import EventChecklist from "../components/checklist/EventChecklist";
+import EventReport from "../components/report/EventReport";
+import PendingReports from "../components/report/PendingReports";
 
 const API_BASE = "http://127.0.0.1:8000";
 
@@ -15,9 +29,41 @@ export default function AdminEvents() {
   const [search, setSearch] = useState("");
   const [selectedEvent, setSelectedEvent] = useState(null);
 
+  // Budget is private: the public list never carries it, so it is fetched
+  // for the opened event with the admin's token (view only).
+  const [budgetInfo, setBudgetInfo] = useState(null);
+  const selectedId = selectedEvent?.id || selectedEvent?._id || null;
+
   useEffect(() => {
     loadEvents();
   }, []);
+
+  useEffect(() => {
+    setBudgetInfo(null);
+    if (!selectedId) return undefined;
+    let cancelled = false;
+    (async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${API_BASE}/api/events/${selectedId}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled) {
+          setBudgetInfo({
+            breakup: data.budget_breakup || null,
+            total: data.budget ?? null,
+          });
+        }
+      } catch (err) {
+        console.error("BUDGET LOAD ERROR:", err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedId]);
 
   async function loadEvents() {
     try {
@@ -100,7 +146,7 @@ export default function AdminEvents() {
   }
 
   return (
-    <>
+    <div className="admin-page">
       {/* SIDEBAR */}
       <Sidebar
         role="admin"
@@ -122,8 +168,8 @@ export default function AdminEvents() {
           right: "0",
           bottom: "0",
           overflowY: "auto",
-          background: "#0b1220",
-          color: "#ffffff",
+          background: "var(--ap-page)",
+          color: "var(--ap-text)",
           padding: "35px",
           boxSizing: "border-box",
           zIndex: 100,
@@ -146,7 +192,7 @@ export default function AdminEvents() {
                 margin: "0 0 7px 0",
                 fontSize: "28px",
                 fontWeight: "700",
-                color: "#ffffff",
+                color: "var(--ap-text)",
               }}
             >
               Events
@@ -155,7 +201,7 @@ export default function AdminEvents() {
             <p
               style={{
                 margin: 0,
-                color: "#94a3b8",
+                color: "var(--ap-muted)",
                 fontSize: "14px",
               }}
             >
@@ -167,9 +213,9 @@ export default function AdminEvents() {
           <button
             onClick={loadEvents}
             style={{
-              background: "#111827",
-              border: "1px solid #334155",
-              color: "#ffffff",
+              background: "var(--ap-card)",
+              border: "1px solid var(--ap-border)",
+              color: "var(--ap-text)",
               borderRadius: "8px",
               padding: "10px 16px",
               cursor: "pointer",
@@ -210,14 +256,18 @@ export default function AdminEvents() {
 
         </div>
 
+        {/* Pending registration-deadline change requests (Admin approval) */}
+        <AdminDeadlineRequests onChanged={loadEvents} />
+        <PendingReports />
+
         {/* =====================================================
             MAIN EVENTS CARD
             ===================================================== */}
 
         <div
           style={{
-            background: "#111827",
-            border: "1px solid #263247",
+            background: "var(--ap-card)",
+            border: "1px solid var(--ap-border)",
             borderRadius: "12px",
             overflow: "hidden",
             width: "100%",
@@ -231,7 +281,7 @@ export default function AdminEvents() {
             style={{
               padding: "16px",
               borderBottom:
-                "1px solid #263247",
+                "1px solid var(--ap-border)",
             }}
           >
             <input
@@ -247,9 +297,9 @@ export default function AdminEvents() {
                 padding: "0 13px",
                 borderRadius: "7px",
                 border:
-                  "1px solid #334155",
-                background: "#0f172a",
-                color: "#ffffff",
+                  "1px solid var(--ap-border)",
+                background: "var(--ap-card2)",
+                color: "var(--ap-text)",
                 outline: "none",
                 fontSize: "13px",
               }}
@@ -263,7 +313,7 @@ export default function AdminEvents() {
               style={{
                 padding: "60px",
                 textAlign: "center",
-                color: "#94a3b8",
+                color: "var(--ap-muted)",
               }}
             >
               Loading events...
@@ -277,7 +327,7 @@ export default function AdminEvents() {
               style={{
                 padding: "60px",
                 textAlign: "center",
-                color: "#f87171",
+                color: "var(--ap-bad-fg)",
               }}
             >
               {error}
@@ -293,7 +343,7 @@ export default function AdminEvents() {
                 style={{
                   padding: "60px",
                   textAlign: "center",
-                  color: "#94a3b8",
+                  color: "var(--ap-muted)",
                 }}
               >
                 No events found.
@@ -367,7 +417,7 @@ export default function AdminEvents() {
                             <div
                               style={{
                                 color:
-                                  "#ffffff",
+                                  "var(--ap-text)",
                                 fontWeight:
                                   "600",
                               }}
@@ -380,7 +430,7 @@ export default function AdminEvents() {
                               <div
                                 style={{
                                   color:
-                                    "#64748b",
+                                    "var(--ap-faint)",
                                   fontSize:
                                     "11px",
                                   marginTop:
@@ -422,7 +472,7 @@ export default function AdminEvents() {
                                   marginTop:
                                     "4px",
                                   color:
-                                    "#64748b",
+                                    "var(--ap-faint)",
                                   fontSize:
                                     "11px",
                                 }}
@@ -447,9 +497,9 @@ export default function AdminEvents() {
                                 borderRadius:
                                   "20px",
                                 background:
-                                  "#063b25",
+                                  "var(--ap-ok-bg)",
                                 color:
-                                  "#22c55e",
+                                  "var(--ap-ok-fg)",
                                 fontSize:
                                   "10px",
                                 fontWeight:
@@ -476,11 +526,11 @@ export default function AdminEvents() {
                                 borderRadius:
                                   "7px",
                                 border:
-                                  "1px solid #334155",
+                                  "1px solid var(--ap-border)",
                                 background:
                                   "transparent",
                                 color:
-                                  "#a5b4fc",
+                                  "var(--ap-acc-fg)",
                                 cursor:
                                   "pointer",
                               }}
@@ -533,9 +583,9 @@ export default function AdminEvents() {
               maxWidth: "100%",
               maxHeight: "85vh",
               overflowY: "auto",
-              background: "#111827",
+              background: "var(--ap-card)",
               border:
-                "1px solid #334155",
+                "1px solid var(--ap-border)",
               borderRadius: "12px",
               padding: "25px",
               boxSizing: "border-box",
@@ -555,7 +605,7 @@ export default function AdminEvents() {
                 <h2
                   style={{
                     margin: 0,
-                    color: "#ffffff",
+                    color: "var(--ap-text)",
                   }}
                 >
                   {selectedEvent.title ||
@@ -564,7 +614,7 @@ export default function AdminEvents() {
 
                 <p
                   style={{
-                    color: "#94a3b8",
+                    color: "var(--ap-muted)",
                     marginTop: "6px",
                   }}
                 >
@@ -582,7 +632,7 @@ export default function AdminEvents() {
                   border: 0,
                   background:
                     "transparent",
-                  color: "#94a3b8",
+                  color: "var(--ap-muted)",
                   fontSize: "26px",
                   cursor: "pointer",
                 }}
@@ -623,17 +673,67 @@ export default function AdminEvents() {
             />
 
             <Detail
+              label="Registration"
+              value={registrationLabel(
+                selectedEvent
+              )}
+            />
+
+            {isRegistrationRequired(selectedEvent) &&
+              selectedEvent.registration_deadline && (
+                <Detail
+                  label="Registration deadline"
+                  value={formatDeadline(
+                    selectedEvent.registration_deadline
+                  )}
+                />
+              )}
+
+            <Detail
               label="Description"
               value={
                 selectedEvent.description
               }
             />
 
+            {/* Event Checklist: view only for Admin (the server enforces it) */}
+            {selectedEvent.approval_status === "published" && (
+              <div style={{ marginTop: "20px" }}>
+                <EventChecklist event={selectedEvent} />
+                <EventReport event={selectedEvent} />
+              </div>
+            )}
+
+            {budgetInfo && hasSavedBreakup(budgetInfo.breakup) && (
+              <div
+                style={{
+                  marginTop: "20px",
+                  "--bbf-text": "var(--ap-text)",
+                  "--bbf-border": "var(--ap-border)",
+                }}
+              >
+                <BudgetBreakupForm
+                  value={breakupFromEvent(budgetInfo.breakup)}
+                  readOnly
+                  idPrefix="admin-budget"
+                />
+              </div>
+            )}
+
+            {budgetInfo &&
+              !hasSavedBreakup(budgetInfo.breakup) &&
+              budgetInfo.total != null && (
+                <Detail
+                  label="Budget (older event, single figure)"
+                  value={`₹ ${Number(budgetInfo.total).toLocaleString("en-IN")}`}
+                />
+              )}
+
           </div>
 
         </div>
       )}
-    </>
+    </div>
   );
 }
 
@@ -641,16 +741,16 @@ function StatCard({ title, value }) {
   return (
     <div
       style={{
-        background: "#111827",
+        background: "var(--ap-card)",
         border:
-          "1px solid #263247",
+          "1px solid var(--ap-border)",
         borderRadius: "10px",
         padding: "20px",
       }}
     >
       <div
         style={{
-          color: "#94a3b8",
+          color: "var(--ap-muted)",
           fontSize: "13px",
         }}
       >
@@ -662,7 +762,7 @@ function StatCard({ title, value }) {
           marginTop: "8px",
           fontSize: "27px",
           fontWeight: "700",
-          color: "#ffffff",
+          color: "var(--ap-text)",
         }}
       >
         {value}
@@ -678,14 +778,14 @@ function Detail({ label, value }) {
         padding: "13px",
         marginBottom: "10px",
         border:
-          "1px solid #263247",
+          "1px solid var(--ap-border)",
         borderRadius: "8px",
-        background: "#0f172a",
+        background: "var(--ap-card2)",
       }}
     >
       <div
         style={{
-          color: "#64748b",
+          color: "var(--ap-faint)",
           fontSize: "10px",
           textTransform: "uppercase",
           marginBottom: "5px",
@@ -696,7 +796,7 @@ function Detail({ label, value }) {
 
       <div
         style={{
-          color: "#e2e8f0",
+          color: "var(--ap-text)",
           fontSize: "13px",
         }}
       >
@@ -709,17 +809,17 @@ function Detail({ label, value }) {
 const headerStyle = {
   padding: "13px 16px",
   textAlign: "left",
-  background: "#101827",
+  background: "var(--ap-card)",
   borderBottom:
-    "1px solid #263247",
-  color: "#8ea0bd",
+    "1px solid var(--ap-border)",
+  color: "var(--ap-muted)",
   fontSize: "11px",
 };
 
 const cellStyle = {
   padding: "16px",
   borderBottom:
-    "1px solid #202b3d",
-  color: "#dbe4f2",
+    "1px solid var(--ap-border)",
+  color: "var(--ap-text)",
   fontSize: "13px",
 };

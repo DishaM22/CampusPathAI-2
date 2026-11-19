@@ -1,10 +1,37 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
+  useLocation,
   useNavigate,
   useParams
 } from "react-router-dom";
 import "../club-modules.css";
+import { DEPARTMENTS, matchDepartment } from "../departments";
 import { ScanAttendance } from "./ClubAttendanceScanner";
+import BudgetBreakupForm from "../components/budget/BudgetBreakupForm";
+import {
+  anySelected,
+  breakupFromEvent,
+  breakupToPayload,
+  computeTotal,
+  emptyBreakup,
+  hasSavedBreakup,
+  validateBreakup,
+} from "../components/budget/budgetUtils";
+
+import RegistrationRequirement, {
+  DeadlineChangeRequest,
+  deadlineProblem,
+  formatDeadline,
+  isRegistrationClosed,
+  isRegistrationRequired,
+  registrationLabel,
+  toDateTimeLocal,
+} from "../components/registration/RegistrationRequirement";
+
+import EventChecklist from "../components/checklist/EventChecklist";
+import EventReport from "../components/report/EventReport";
+
+import { useTheme } from "../context/ThemeContext";
 const API_BASE = "http://127.0.0.1:8000";
 
 
@@ -219,48 +246,6 @@ function PosterField({ poster, onPick, children }) {
   );
 }
 
-
-const MAX_REPORT_BYTES = 10 * 1024 * 1024; // 10 MB
-
-async function uploadEventReport(file) {
-  if (!file) return null;
-
-  if (
-    file.type !== "application/pdf" ||
-    !file.name.toLowerCase().endsWith(".pdf")
-  ) {
-    throw new Error("Event report must be a PDF file.");
-  }
-
-  if (file.size > MAX_REPORT_BYTES) {
-    throw new Error("Event report must be 10 MB or smaller.");
-  }
-
-  const body = new FormData();
-  body.append("file", file);
-
-  const token = getToken();
-
-  const response = await fetch(`${API_BASE}/api/events/report`, {
-    method: "POST",
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-    body,
-  });
-
-  const result = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    throw new Error(
-      result?.detail || "Failed to upload event report."
-    );
-  }
-
-  if (!result.report_pdf_url) {
-    throw new Error("Report upload did not return a file URL.");
-  }
-
-  return result.report_pdf_url;
-}
 
 const emptyResourcePerson = () => ({
   name: "",
@@ -670,7 +655,219 @@ export function MyClub() {
 // CREATE EVENT
 // ============================================================
 
+// ============================================================
+// ORGANIZING DETAILS + SPOC (shared by create / edit)
+// ============================================================
+
+// Category choices for the event forms. Stored as plain text, so adding
+// one here needs no backend change.
+const EVENT_CATEGORIES = [
+  "Technical",
+  "Cultural",
+  "Sports",
+  "Workshop",
+  "Competition",
+  "Conference",
+  "Masterclass",
+  "Webinar",
+  "Industry Visit",
+  "Seminar",
+  "Camp",
+  "FDP",
+  "SDP",
+  "MDP",
+  "Guest Lecturers",
+  "Others",
+];
+
+const EVENT_MODES = ["Online", "Offline", "Hybrid"];
+
+const EMAIL_REGEX = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/;
+
+/* 10-digit Indian mobile; +91 / 91 / 0 prefixes, spaces and dashes allowed. */
+function normalizeIndianMobile(value) {
+  let digits = String(value || "").replace(/[\s\-().]/g, "");
+  if (digits.startsWith("+91")) digits = digits.slice(3);
+  else if (digits.length === 12 && digits.startsWith("91")) digits = digits.slice(2);
+  else if (digits.length === 11 && digits.startsWith("0")) digits = digits.slice(1);
+  return digits;
+}
+
+/* Indian rupee format, e.g. 25000 -> "₹ 25,000". */
+const formatRupees = (value) =>
+  `₹ ${Number(value).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
+
+/* Returns the first problem as a readable message, or "" if all is well.
+   The backend repeats these checks; this only gives faster feedback. */
+function validateEventDetails(form) {
+  if (!form.schoolName.trim()) return "School name is required.";
+  if (!DEPARTMENTS.includes(form.department)) {
+    return "Please select the department from the list.";
+  }
+  if (!EVENT_MODES.includes(form.eventMode)) {
+    return "Please select the mode of the event (Online, Offline or Hybrid).";
+  }
+  if (form.eventMode !== "Online" && !form.venue.trim()) {
+    return "Venue is required for Offline and Hybrid events.";
+  }
+  if (!form.spocName.trim()) return "SPOC name is required.";
+  if (!form.spocDesignation.trim()) return "SPOC designation is required.";
+  if (!EMAIL_REGEX.test(form.spocEmail.trim())) {
+    return "Enter a valid SPOC email address.";
+  }
+  if (!/^[6-9][0-9]{9}$/.test(normalizeIndianMobile(form.spocContact))) {
+    return "Enter a valid 10-digit SPOC mobile number (starting with 6, 7, 8 or 9).";
+  }
+  // The budget is checked separately by validateBreakup().
+  return "";
+}
+
+function EventOrganizingFields({
+  form,
+  updateField,
+  breakup,
+  setBreakup,
+  legacyTotal,
+  registrationRequired,
+  setRegistrationRequired,
+  registrationDeadline,
+  setRegistrationDeadline,
+  deadlineLocked,
+}) {
+  const headingStyle = { margin: "8px 0 0", fontSize: "16px" };
+
+  return (
+    <>
+      <h3 style={headingStyle}>Organizing Details</h3>
+
+      <div className="form-grid">
+        <div className="form-group">
+          <label>School Name</label>
+          <input
+            name="schoolName"
+            value={form.schoolName}
+            onChange={updateField}
+            placeholder="e.g. School of Computer Science"
+            maxLength={150}
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Department</label>
+          <select
+            name="department"
+            value={form.department}
+            onChange={updateField}
+            required
+          >
+            <option value="">Select department</option>
+            {DEPARTMENTS.map((departmentName) => (
+              <option key={departmentName} value={departmentName}>
+                {departmentName}
+              </option>
+            ))}
+          </select>
+          <p style={{ fontSize: "12px", opacity: 0.7, margin: "4px 0 0" }}>
+            The event is sent to the HOD of this department for approval.
+          </p>
+        </div>
+      </div>
+
+      <div className="form-group">
+        <label>Mode of Event</label>
+        <select
+          name="eventMode"
+          value={form.eventMode}
+          onChange={updateField}
+          required
+        >
+          <option value="">Select mode</option>
+          {EVENT_MODES.map((modeName) => (
+            <option key={modeName} value={modeName}>
+              {modeName}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <h3 style={headingStyle}>Single Point of Contact (SPOC)</h3>
+
+      <div className="form-grid">
+        <div className="form-group">
+          <label>SPOC Name</label>
+          <input
+            name="spocName"
+            value={form.spocName}
+            onChange={updateField}
+            placeholder="Full name"
+            maxLength={150}
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label>SPOC Designation</label>
+          <input
+            name="spocDesignation"
+            value={form.spocDesignation}
+            onChange={updateField}
+            placeholder="e.g. Assistant Professor"
+            maxLength={150}
+            required
+          />
+        </div>
+      </div>
+
+      <div className="form-grid">
+        <div className="form-group">
+          <label>SPOC Email Address</label>
+          <input
+            type="email"
+            name="spocEmail"
+            value={form.spocEmail}
+            onChange={updateField}
+            placeholder="name@university.edu"
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label>SPOC Contact Number</label>
+          <input
+            type="tel"
+            name="spocContact"
+            value={form.spocContact}
+            onChange={updateField}
+            placeholder="10-digit mobile number"
+            required
+          />
+        </div>
+      </div>
+
+      <RegistrationRequirement
+        value={registrationRequired}
+        onChange={setRegistrationRequired}
+        idPrefix="club-regreq"
+        deadline={registrationDeadline}
+        onDeadlineChange={setRegistrationDeadline}
+        deadlineLocked={deadlineLocked}
+      />
+
+      <BudgetBreakupForm
+        value={breakup}
+        onChange={setBreakup}
+        legacyTotal={legacyTotal}
+        idPrefix="club-budget"
+      />
+    </>
+  );
+}
+
+
 export function CreateEvent() {
+  const navigate = useNavigate();
+  const submitting = useRef(false); // blocks double clicks / double submits
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -681,7 +878,20 @@ export function CreateEvent() {
     venue: "",
     capacity: "",
     skills: "",
+    schoolName: "",
+    department: "",
+    eventMode: "",
+    spocName: "",
+    spocDesignation: "",
+    spocEmail: "",
+    spocContact: "",
   });
+
+  const [breakup, setBreakup] = useState(emptyBreakup);
+
+  // Default: students register (existing behaviour)
+  const [registrationRequired, setRegistrationRequired] = useState(true);
+  const [registrationDeadline, setRegistrationDeadline] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -691,7 +901,6 @@ export function CreateEvent() {
   const [resourcePersons, setResourcePersons] = useState([
     emptyResourcePerson(),
   ]);
-  const [reportFile, setReportFile] = useState(null);
   function updateField(e) {
     setForm({
       ...form,
@@ -701,10 +910,25 @@ export function CreateEvent() {
 
   async function submitEvent(e) {
     e.preventDefault();
+    if (submitting.current) return;
+    submitting.current = true;
 
     setLoading(true);
     setError("");
     setMessage("");
+
+    const detailsProblem =
+      validateEventDetails(form) ||
+      validateBreakup(breakup) ||
+      (registrationRequired
+        ? deadlineProblem(registrationDeadline, form.date, form.startTime)
+        : "");
+    if (detailsProblem) {
+      setError(detailsProblem);
+      setLoading(false);
+      submitting.current = false;
+      return;
+    }
 
     try {
       // Backend expects "location", not "venue".
@@ -714,10 +938,6 @@ export function CreateEvent() {
       const posterUrl = poster.file
         ? await uploadPosterFile(poster.file)
         : null;
-      
-      const newReportPdfUrl = reportFile
-  ? await uploadEventReport(reportFile)
-  : null;
 
       const payload = {
   title: form.title.trim(),
@@ -730,6 +950,22 @@ export function CreateEvent() {
   date: form.date,
   time: `${form.startTime} - ${form.endTime}`,
   location: form.venue.trim(),
+  school_name: form.schoolName.trim(),
+  department: form.department.trim(),
+  event_mode: form.eventMode,
+  spoc_name: form.spocName.trim(),
+  spoc_designation: form.spocDesignation.trim(),
+  spoc_email: form.spocEmail.trim(),
+  spoc_contact: normalizeIndianMobile(form.spocContact),
+  // Total of the ticked rows (the server recalculates and checks it)
+  budget: computeTotal(breakup),
+  budget_breakup: breakupToPayload(breakup),
+  registration_required: registrationRequired,
+  // Only events with registration have a deadline (IST); published events
+  // change it through "Request deadline change" instead.
+  ...(deadlineLocked
+    ? {}
+    : { registration_deadline: registrationRequired ? registrationDeadline : null }),
 
   capacity: Number(form.capacity),
 
@@ -740,12 +976,6 @@ export function CreateEvent() {
 
   // Always sent, so removing every person clears the list
 resource_persons: cleanResourcePersons(resourcePersons),
-
-// Replace the report only when a new PDF is uploaded.
-// Otherwise, preserve the existing report.
-...(newReportPdfUrl
-  ? { report_pdf_url: newReportPdfUrl }
-  : {}),
 
   ...(posterUrl ? { poster_url: posterUrl } : {}),
 };
@@ -761,9 +991,17 @@ resource_persons: cleanResourcePersons(resourcePersons),
 
       setMessage("Event created successfully!");
 
+      // Go to the saved event's details page (status, Back / View My Events).
+      const newId = result?.event_id || result?.id;
+      if (newId) {
+        navigate(`/club-dashboard/events/${newId}`, {
+          state: { justCreated: true },
+        });
+        return; // the form unmounts; keep the submit lock until then
+      }
+
       poster.clear("");
       setResourcePersons([emptyResourcePerson()]);
-      setReportFile(null);
 
       setForm({
         title: "",
@@ -775,7 +1013,17 @@ resource_persons: cleanResourcePersons(resourcePersons),
         venue: "",
         capacity: "",
         skills: "",
+        schoolName: "",
+        department: "",
+        eventMode: "",
+        spocName: "",
+        spocDesignation: "",
+        spocEmail: "",
+        spocContact: "",
       });
+      setBreakup(emptyBreakup());
+      setRegistrationRequired(true);
+      setRegistrationDeadline("");
 
     } catch (err) {
       console.error("CREATE EVENT ERROR:", err);
@@ -801,6 +1049,7 @@ resource_persons: cleanResourcePersons(resourcePersons),
       setError(errorMessage);
     } finally {
       setLoading(false);
+      submitting.current = false;
     }
   }
 
@@ -870,25 +1119,11 @@ resource_persons: cleanResourcePersons(resourcePersons),
                   Select category
                 </option>
 
-                <option value="Technical">
-                  Technical
-                </option>
-
-                <option value="Cultural">
-                  Cultural
-                </option>
-
-                <option value="Sports">
-                  Sports
-                </option>
-
-                <option value="Workshop">
-                  Workshop
-                </option>
-
-                <option value="Competition">
-                  Competition
-                </option>
+                {EVENT_CATEGORIES.map((categoryName) => (
+                  <option key={categoryName} value={categoryName}>
+                    {categoryName}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -962,16 +1197,37 @@ resource_persons: cleanResourcePersons(resourcePersons),
 
           {/* VENUE */}
           <div className="form-group">
-            <label>Venue</label>
+            <label>
+              Venue{form.eventMode === "Online" ? " (optional for Online events)" : ""}
+            </label>
 
             <input
               name="venue"
               value={form.venue}
               onChange={updateField}
-              placeholder="Enter venue"
-              required
+              placeholder={
+                form.eventMode === "Online"
+                  ? "Meeting platform or link (optional)"
+                  : "Enter venue"
+              }
+              required={form.eventMode !== "Online"}
             />
           </div>
+
+
+          {/* ORGANIZING DETAILS + SPOC + BUDGET BREAKUP */}
+          <EventOrganizingFields
+            form={form}
+            updateField={updateField}
+            breakup={breakup}
+            setBreakup={setBreakup}
+            legacyTotal={null}
+            registrationRequired={registrationRequired}
+            setRegistrationRequired={setRegistrationRequired}
+            registrationDeadline={registrationDeadline}
+            setRegistrationDeadline={setRegistrationDeadline}
+            deadlineLocked={false}
+          />
 
 
           {/* SKILLS */}
@@ -1001,34 +1257,6 @@ resource_persons: cleanResourcePersons(resourcePersons),
             setPersons={setResourcePersons}
           />
 
-          
-{/* EVENT REPORT PDF */}
-<div className="form-group">
-  <label htmlFor="event-report-pdf">
-    Event Report (PDF)
-  </label>
-
-  <small className="form-help">
-    Upload the event report or documentation. PDF only, maximum 10 MB.
-  </small>
-
-  <input
-    id="event-report-pdf"
-    type="file"
-    accept=".pdf,application/pdf"
-    onChange={(e) =>
-      setReportFile(e.target.files?.[0] || null)
-    }
-  />
-
-  {reportFile && (
-    <small className="form-help">
-      Selected: {reportFile.name}
-      {" · "}
-      {(reportFile.size / (1024 * 1024)).toFixed(2)} MB
-    </small>
-  )}
-</div>
 
 
           {/* SUBMIT */}
@@ -1057,6 +1285,96 @@ resource_persons: cleanResourcePersons(resourcePersons),
 // ============================================================
 // MY EVENTS
 // ============================================================
+
+// ============================================================
+// APPROVAL STATUS HELPERS (Faculty -> HOD -> Dean -> Admin)
+// ============================================================
+
+const REVIEW_ROLE_LABELS = {
+  faculty: "Faculty",
+  hod: "HOD",
+  dean: "Dean",
+  admin: "Admin",
+};
+
+const REVIEW_DECISION_LABELS = {
+  approved: "Approved",
+  changes: "Requested changes",
+  rejected: "Rejected",
+};
+
+function ReturnedNotice({ review }) {
+  if (!review) return null;
+  const role = REVIEW_ROLE_LABELS[review.role] || review.role || "Reviewer";
+  return (
+    <div
+      style={{
+        margin: "12px 0",
+        padding: "10px 12px",
+        borderRadius: "10px",
+        background: "rgba(245, 158, 11, 0.12)",
+        border: "1px solid rgba(245, 158, 11, 0.35)",
+        fontSize: "13px",
+        lineHeight: 1.5,
+      }}
+    >
+      <strong>
+        {role} {review.decision === "rejected" ? "rejected this event" : "requested changes"}
+      </strong>
+      {review.remarks ? `: “${review.remarks}”` : "."}
+      <div style={{ opacity: 0.8, marginTop: 4 }}>
+        Edit the event and save to resubmit it for approval.
+      </div>
+    </div>
+  );
+}
+
+function ApprovalHistory({ event }) {
+  const history = Array.isArray(event?.approval_history)
+    ? [...event.approval_history].reverse()
+    : [];
+  if (!event?.approval_status && history.length === 0) return null;
+
+  return (
+    <div style={{ margin: "16px 0" }}>
+      <h3 style={{ margin: "0 0 8px", fontSize: "15px" }}>
+        Approval status
+      </h3>
+      {history.length === 0 ? (
+        <p style={{ margin: 0, opacity: 0.8, fontSize: "13px" }}>
+          No review decisions yet. Current stage:{" "}
+          {String(event.approval_status || "—").replace(/_/g, " ")}.
+        </p>
+      ) : (
+        <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+          {history.map((item, index) => (
+            <li
+              key={index}
+              style={{
+                padding: "8px 0",
+                borderBottom: "1px solid rgba(148, 163, 184, 0.2)",
+                fontSize: "13px",
+              }}
+            >
+              <strong>
+                {REVIEW_ROLE_LABELS[item.reviewer_role] || item.reviewer_role}
+              </strong>{" "}
+              — {REVIEW_DECISION_LABELS[item.decision] || item.decision}{" "}
+              <span style={{ opacity: 0.7 }}>
+                (v{item.submission_version || 1})
+              </span>
+              {item.remarks && (
+                <div style={{ opacity: 0.85, fontStyle: "italic" }}>
+                  “{item.remarks}”
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 export function MyEvents() {
   const navigate = useNavigate();
@@ -1192,6 +1510,15 @@ export function MyEvents() {
                 />
               </div>
 
+              {/* REVIEWER REMARKS (changes requested / rejected) */}
+              <ReturnedNotice review={event.latest_review} />
+
+              {event.can_edit === false && (
+                <p style={{ margin: "8px 0", fontSize: "12px", opacity: 0.8 }}>
+                  Under review — editing is locked until a reviewer responds.
+                </p>
+              )}
+
               {/* ACTION BUTTONS */}
               <div className="event-actions">
 
@@ -1206,6 +1533,12 @@ export function MyEvents() {
                 <button
                   type="button"
                   className="event-action-btn"
+                  disabled={event.can_edit === false}
+                  title={
+                    event.can_edit === false
+                      ? "This event is under review and cannot be edited"
+                      : "Edit this event"
+                  }
                   onClick={() => handleEdit(event)}
                 >
                   Edit
@@ -1221,6 +1554,123 @@ export function MyEvents() {
                   Registrations
                 </button>
 
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+    </Page>
+  );
+}
+
+// ============================================================
+// EDIT REQUESTS
+// Events a reviewer (Faculty / HOD / Dean / Admin) sent back to the
+// club, so the organizer can edit and resubmit them.
+// ============================================================
+
+export function EditRequests() {
+  const navigate = useNavigate();
+
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    loadReturnedEvents();
+  }, []);
+
+  async function loadReturnedEvents() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data = await apiFetch("/api/club/dashboard");
+
+      const returned = (data.upcomingEvents || []).filter(
+        (event) =>
+          event.approval_status === "changes_requested" ||
+          event.approval_status === "rejected"
+      );
+
+      setEvents(returned);
+    } catch (err) {
+      setError(err.message || "Failed to load events that need changes.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Page
+      title="Edit Requests"
+      subtitle="Events sent back by a reviewer. Edit them and save to resubmit for approval."
+    >
+      <ErrorBox message={error} />
+
+      {loading ? (
+        <Loading />
+      ) : events.length === 0 ? (
+        <Card className="empty-card">
+          <div className="empty-icon">✅</div>
+
+          <h3>Nothing to edit</h3>
+
+          <p>
+            No reviewer has asked for changes. Events that are sent back will appear here.
+          </p>
+        </Card>
+      ) : (
+        <div className="event-grid">
+          {events.map((event) => (
+            <Card key={event.id} className="club-event-card">
+              <div className="event-card-header">
+                <span className="event-category">
+                  {(event.category || "Event").toUpperCase()}
+                </span>
+
+                <span className="event-status">
+                  {(event.status || "").toUpperCase()}
+                </span>
+              </div>
+
+              <h3 className="event-title">{event.title}</h3>
+
+              <div className="event-detail">
+                📅 {event.date || "Date not available"}
+              </div>
+
+              <div className="event-detail">
+                🕐 {event.time || "Time not available"}
+              </div>
+
+              <div className="event-detail">
+                📍 {event.venue || "Venue not available"}
+              </div>
+
+              {/* WHO SENT IT BACK AND WHY */}
+              <ReturnedNotice review={event.latest_review} />
+
+              <div className="event-actions">
+                <button
+                  type="button"
+                  className="event-action-btn"
+                  onClick={() =>
+                    navigate(`/club-dashboard/events/${event.id}`)
+                  }
+                >
+                  View
+                </button>
+
+                <button
+                  type="button"
+                  className="event-action-btn"
+                  onClick={() =>
+                    navigate(`/club-dashboard/events/${event.id}/edit`)
+                  }
+                >
+                  Edit &amp; Resubmit
+                </button>
               </div>
             </Card>
           ))}
@@ -2077,6 +2527,7 @@ export function Analytics() {
 // ============================================================
 
 export function Notifications() {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -2106,6 +2557,10 @@ export function Notifications() {
             ? new Date(n.created_at).toLocaleString()
             : "",
           read: n.is_read,
+          // Dean-requested changes: backend should send these fields
+          type: n.type || "",
+          eventId: n.event_id || n.related_id || null,
+          remarks: n.remarks || n.comment || "",
         }));
       } catch (notifErr) {
         console.error("Event update notifications error:", notifErr);
@@ -2228,7 +2683,7 @@ export function Notifications() {
                 >
 
                   <div className="notification-icon">
-                    👤
+                    {notification.type === "changes_requested" ? "📝" : "👤"}
                   </div>
 
                   <div className="notification-content">
@@ -2241,11 +2696,34 @@ export function Notifications() {
                       {notification.message}
                     </p>
 
+                    {notification.remarks && (
+                      <p>
+                        <em>Reviewer's remarks: {notification.remarks}</em>
+                      </p>
+                    )}
+
                     {notification.time && (
                       <small>
                         {notification.time}
                       </small>
                     )}
+
+                    {notification.type === "changes_requested" &&
+                      notification.eventId && (
+                        <div style={{ marginTop: 8 }}>
+                          <button
+                            type="button"
+                            className="btn-primary"
+                            onClick={() =>
+                              navigate(
+                                `/club-dashboard/events/${notification.eventId}/edit`
+                              )
+                            }
+                          >
+                            Edit Event
+                          </button>
+                        </div>
+                      )}
 
                   </div>
 
@@ -2364,7 +2842,7 @@ export function Settings() {
   const [eventNotifications, setEventNotifications] =
     useState(true);
 
-
+  const { theme, setTheme } = useTheme();
   return (
     <Page
       title="Settings"
@@ -2403,7 +2881,8 @@ export function Settings() {
           />
 
         </div>
-
+        
+        
 
         <div className="setting-row">
 
@@ -2418,6 +2897,7 @@ export function Settings() {
             </p>
 
           </div>
+          
 
           <input
             type="checkbox"
@@ -2430,6 +2910,24 @@ export function Settings() {
           />
 
         </div>
+        <div className="appearance-settings">
+  <h3>Appearance</h3>
+  <p>Choose your preferred dashboard theme.</p>
+
+  <button
+    onClick={() => setTheme("light")}
+    className={theme === "light" ? "active" : ""}
+  >
+    ☀️ Light Mode
+  </button>
+
+  <button
+    onClick={() => setTheme("dark")}
+    className={theme === "dark" ? "active" : ""}
+  >
+    🌙 Dark Mode
+  </button>
+</div>
 
       </Card>
 
@@ -2466,8 +2964,25 @@ export function Settings() {
 // VIEW EVENT
 // ============================================================
 
+const APPROVAL_LABELS = {
+  pending_faculty: "Waiting for Faculty review",
+  pending_hod: "Waiting for HOD review",
+  pending_dean: "Waiting for Dean review",
+  pending_admin: "Waiting for Admin review",
+  published: "Published",
+  changes_requested: "Changes requested",
+  rejected: "Rejected",
+};
+const approvalStatusLabel = (status) =>
+  APPROVAL_LABELS[status] || (status ? String(status) : "Published");
+// Same rule as the server: events under active review cannot be edited.
+const canEditEvent = (event) =>
+  !String(event?.approval_status || "").startsWith("pending_");
+
 export function ClubEventView() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const justCreated = Boolean(useLocation().state?.justCreated);
 
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -2531,6 +3046,29 @@ export function ClubEventView() {
     >
       <Card>
 
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 16 }}>
+          {justCreated && <strong>Event created successfully.</strong>}
+          <span>
+            Approval status:{" "}
+            <strong>{approvalStatusLabel(event.approval_status)}</strong>
+          </span>
+          <button type="button" className="event-action-btn" onClick={() => navigate("/club-dashboard")}>
+            Back to Dashboard
+          </button>
+          <button type="button" className="event-action-btn" onClick={() => navigate("/club-dashboard/events")}>
+            View My Events
+          </button>
+          {canEditEvent(event) && (
+            <button
+              type="button"
+              className="event-action-btn"
+              onClick={() => navigate(`/club-dashboard/events/${event._id || event.id || id}/edit`)}
+            >
+              Edit Event
+            </button>
+          )}
+        </div>
+
         {event.poster_url && (
           <img
             src={posterSrc(event.poster_url)}
@@ -2566,6 +3104,8 @@ export function ClubEventView() {
         </div>
 
 
+        <ApprovalHistory event={event} />
+
         <div className="event-view-details">
 
          <div className="event-view-item">
@@ -2598,9 +3138,90 @@ export function ClubEventView() {
             <strong>
               {event.location ||
                 event.venue ||
-                "Not specified"}
+                (event.event_mode === "Online" ? "Online" : "Not specified")}
             </strong>
           </div>
+
+
+          {event.event_mode && (
+            <div className="event-view-item">
+              <span>💻 Mode</span>
+              <strong>{event.event_mode}</strong>
+            </div>
+          )}
+
+
+          {event.school_name && (
+            <div className="event-view-item">
+              <span>🏫 School</span>
+              <strong>{event.school_name}</strong>
+            </div>
+          )}
+
+
+          {event.department && (
+            <div className="event-view-item">
+              <span>🎓 Department</span>
+              <strong>{event.department}</strong>
+            </div>
+          )}
+
+
+          {(event.spoc_name || event.spoc_designation) && (
+            <div className="event-view-item">
+              <span>👤 SPOC</span>
+              <strong>
+                {[event.spoc_name, event.spoc_designation]
+                  .filter(Boolean)
+                  .join(", ")}
+              </strong>
+            </div>
+          )}
+
+
+          {event.spoc_email && (
+            <div className="event-view-item">
+              <span>✉️ SPOC Email</span>
+              <strong>
+                <a href={`mailto:${event.spoc_email}`}>
+                  {event.spoc_email}
+                </a>
+              </strong>
+            </div>
+          )}
+
+
+          {event.spoc_contact && (
+            <div className="event-view-item">
+              <span>📞 SPOC Contact</span>
+              <strong>{event.spoc_contact}</strong>
+            </div>
+          )}
+
+
+          {event.budget != null && (
+            <div className="event-view-item">
+              <span>💰 Budget (private)</span>
+              <strong>{formatRupees(event.budget)}</strong>
+            </div>
+          )}
+
+
+          <div className="event-view-item">
+            <span>📝 Registration</span>
+            <strong>{registrationLabel(event)}</strong>
+          </div>
+
+
+          {isRegistrationRequired(event) && event.registration_deadline && (
+            <div className="event-view-item">
+              <span>⏰ Registration deadline</span>
+              <strong>
+                {formatDeadline(event.registration_deadline)}
+                {isRegistrationClosed(event) ? " (closed)" : ""}
+              </strong>
+            </div>
+          )}
 
 
           <div className="event-view-item">
@@ -2642,24 +3263,41 @@ export function ClubEventView() {
 
         <ResourcePersonsView persons={event.resource_persons} />
 
-        {/* EVENT REPORT */}
+        {/* Published event: ask the Admin to change the deadline */}
+        <DeadlineChangeRequest event={event} />
+
+        {/* Event Checklist (published events only; the server enforces it) */}
+        <EventChecklist event={event} />
+        <EventReport event={event} />
+
+        {/* BUDGET BREAKUP (read-only here; edit it from the Edit page) */}
+        {hasSavedBreakup(event.budget_breakup) && (
+          <div className="event-skills">
+            <h3>Budget Breakup</h3>
+            <BudgetBreakupForm
+              value={breakupFromEvent(event.budget_breakup)}
+              readOnly
+              idPrefix="club-view-budget"
+            />
+          </div>
+        )}
+
+        {/* LEGACY EVENT REPORT: only older events can have one */}
+        {event.report_pdf_url && (
         <div className="event-skills">
           <h3>Event Report</h3>
 
-          {event.report_pdf_url ? (
-            <p>
-              <a
-                href={posterSrc(event.report_pdf_url)}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                📄 View / Download Event Report (PDF)
-              </a>
-            </p>
-          ) : (
-            <p>No report has been uploaded yet.</p>
-          )}
+          <p>
+            <a
+              href={posterSrc(event.report_pdf_url)}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              📄 View / Download Event Report (PDF)
+            </a>
+          </p>
         </div>
+        )}
 
       </Card>
     </Page>
@@ -2686,8 +3324,17 @@ export function EditEvent() {
   const [resourcePersons, setResourcePersons] = useState([
     emptyResourcePerson(),
   ]);
-  const [existingReportPdf, setExistingReportPdf] = useState("");
-  const [reportFile, setReportFile] = useState(null);
+
+  // Budget breakup. legacyTotal is set only for older events that were
+  // saved with a single budget figure and have no breakup yet.
+  const [breakup, setBreakup] = useState(emptyBreakup);
+  const [legacyTotal, setLegacyTotal] = useState(null);
+
+  // Registration requirement of the event being edited (older events: true)
+  const [registrationRequired, setRegistrationRequired] = useState(true);
+  const [registrationDeadline, setRegistrationDeadline] = useState("");
+  // Published events keep their deadline; changes go through the Admin.
+  const [deadlineLocked, setDeadlineLocked] = useState(false);
 
   const [form, setForm] = useState({
     title: "",
@@ -2699,6 +3346,13 @@ export function EditEvent() {
     venue: "",
     capacity: "",
     skills: "",
+    schoolName: "",
+    department: "",
+    eventMode: "",
+    spocName: "",
+    spocDesignation: "",
+    spocEmail: "",
+    spocContact: "",
   });
 
 
@@ -2743,14 +3397,30 @@ export function EditEvent() {
         skills: Array.isArray(data.skills)
           ? data.skills.join(", ")
           : data.skills || "",
+        // Older events have none of these yet; they stay blank until filled in.
+        schoolName: data.school_name || "",
+        department: matchDepartment(data.department),
+        eventMode: data.event_mode || "",
+        spocName: data.spoc_name || "",
+        spocDesignation: data.spoc_designation || "",
+        spocEmail: data.spoc_email || "",
+        spocContact: data.spoc_contact || "",
       });
+
+      // Budget breakup (the server only sends it to accounts allowed to see it)
+      const savedBreakup = hasSavedBreakup(data.budget_breakup);
+      setBreakup(breakupFromEvent(data.budget_breakup));
+      setRegistrationRequired(isRegistrationRequired(data));
+      setRegistrationDeadline(toDateTimeLocal(data.registration_deadline));
+      setDeadlineLocked(data.approval_status === "published");
+      setLegacyTotal(
+        !savedBreakup && data.budget != null ? Number(data.budget) : null
+      );
 
       setResourcePersons(resourcePersonsFromEvent(data));
       setExistingPoster(data.poster_url || "");
       setRemovePoster(false);
       poster.clear(data.poster_url || "");
-      setExistingReportPdf(data.report_pdf_url || "");
-      setReportFile(null);
 
     } catch (err) {
       console.error("LOAD EVENT ERROR:", err);
@@ -2779,15 +3449,32 @@ export function EditEvent() {
     setError("");
     setMessage("");
 
+    let detailsProblem =
+      validateEventDetails(form) ||
+      validateBreakup(breakup) ||
+      (registrationRequired && !deadlineLocked && registrationDeadline
+        ? deadlineProblem(registrationDeadline, form.date, form.startTime)
+        : "");
+
+    // An older event only has a single figure. Do not silently replace it
+    // with 0: the breakup must be filled in first.
+    if (!detailsProblem && legacyTotal !== null && !anySelected(breakup)) {
+      detailsProblem =
+        "This event only has an old single budget figure. Tick the applicable rows in the Budget Breakup Form and enter their costs.";
+    }
+
+    if (detailsProblem) {
+      setError(detailsProblem);
+      setSaving(false);
+      return;
+    }
+
     try {
 
       // Upload a replacement poster first (if one was chosen)
       const newPosterUrl = poster.file
         ? await uploadPosterFile(poster.file)
         : null;
-      const newReportPdfUrl = reportFile
-  ? await uploadEventReport(reportFile)
-  : null;
       const payload = {
   title: form.title.trim(),
   description: form.description.trim(),
@@ -2798,6 +3485,22 @@ export function EditEvent() {
   date: form.date,
   time: `${form.startTime} - ${form.endTime}`,
   location: form.venue.trim(),
+  school_name: form.schoolName.trim(),
+  department: form.department.trim(),
+  event_mode: form.eventMode,
+  spoc_name: form.spocName.trim(),
+  spoc_designation: form.spocDesignation.trim(),
+  spoc_email: form.spocEmail.trim(),
+  spoc_contact: normalizeIndianMobile(form.spocContact),
+  // Total of the ticked rows (the server recalculates and checks it)
+  budget: computeTotal(breakup),
+  budget_breakup: breakupToPayload(breakup),
+  registration_required: registrationRequired,
+  // Only events with registration have a deadline (IST); published events
+  // change it through "Request deadline change" instead.
+  ...(deadlineLocked
+    ? {}
+    : { registration_deadline: registrationRequired ? registrationDeadline : null }),
 
   // IMPORTANT
   capacity: Number(form.capacity),
@@ -2809,12 +3512,6 @@ export function EditEvent() {
 
   // Always sent, so removing every person clears the list
   resource_persons: cleanResourcePersons(resourcePersons),
-  // Replace the report only when a new PDF is uploaded.
-// If no new PDF is selected, keep the existing report.
-...(newReportPdfUrl
-  ? { report_pdf_url: newReportPdfUrl }
-  : {}),
-
   // new file -> replace; "" -> remove; omitted -> keep current poster
   ...(newPosterUrl
     ? { poster_url: newPosterUrl }
@@ -2947,25 +3644,19 @@ export function EditEvent() {
                   Select category
                 </option>
 
-                <option value="Technical">
-                  Technical
-                </option>
+                {EVENT_CATEGORIES.map((categoryName) => (
+                  <option key={categoryName} value={categoryName}>
+                    {categoryName}
+                  </option>
+                ))}
 
-                <option value="Cultural">
-                  Cultural
-                </option>
-
-                <option value="Sports">
-                  Sports
-                </option>
-
-                <option value="Workshop">
-                  Workshop
-                </option>
-
-                <option value="Competition">
-                  Competition
-                </option>
+                {/* keep an older event's existing category selectable */}
+                {form.category &&
+                  !EVENT_CATEGORIES.includes(form.category) && (
+                    <option value={form.category}>
+                      {form.category}
+                    </option>
+                  )}
               </select>
             </div>
 
@@ -3031,15 +3722,32 @@ export function EditEvent() {
 
 
           <div className="form-group">
-            <label>Venue</label>
+            <label>
+              Venue{form.eventMode === "Online" ? " (optional for Online events)" : ""}
+            </label>
 
             <input
               name="venue"
               value={form.venue}
               onChange={updateField}
-              required
+              required={form.eventMode !== "Online"}
             />
           </div>
+
+
+          {/* ORGANIZING DETAILS + SPOC + BUDGET BREAKUP */}
+          <EventOrganizingFields
+            form={form}
+            updateField={updateField}
+            breakup={breakup}
+            setBreakup={setBreakup}
+            legacyTotal={legacyTotal}
+            registrationRequired={registrationRequired}
+            setRegistrationRequired={setRegistrationRequired}
+            registrationDeadline={registrationDeadline}
+            setRegistrationDeadline={setRegistrationDeadline}
+            deadlineLocked={deadlineLocked}
+          />
 
 
           <div className="form-group">
@@ -3112,66 +3820,6 @@ export function EditEvent() {
             setPersons={setResourcePersons}
           />
 
-          
-{/* EVENT REPORT PDF */}
-<div className="form-group">
-  <label>Event Report (PDF)</label>
-
-  {existingReportPdf && (
-    <p>
-      <a
-        href={posterSrc(existingReportPdf)}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        View / Download Existing Report
-      </a>
-    </p>
-  )}
-
-  <input
-    type="file"
-    accept=".pdf,application/pdf"
-    onChange={(e) => {
-      const file = e.target.files?.[0] || null;
-
-      if (!file) {
-        setReportFile(null);
-        return;
-      }
-
-      if (
-        file.type !== "application/pdf" ||
-        !file.name.toLowerCase().endsWith(".pdf")
-      ) {
-        setError("Please select a PDF file.");
-        e.target.value = "";
-        setReportFile(null);
-        return;
-      }
-
-      if (file.size > 10 * 1024 * 1024) {
-        setError("PDF must be 10 MB or smaller.");
-        e.target.value = "";
-        setReportFile(null);
-        return;
-      }
-
-      setError("");
-      setReportFile(file);
-    }}
-  />
-
-  <small className="form-help">
-    Select a new PDF to replace the existing report. Leave empty to keep it.
-  </small>
-
-  {reportFile && (
-    <p className="form-help">
-      Selected: {reportFile.name}
-    </p>
-  )}
-</div>
 
 
 
@@ -3242,6 +3890,13 @@ export default function ClubModules() {
     path === "/club/my-events"
   ) {
     return <MyEvents />;
+  }
+
+
+  if (
+    path === "/club/edit-requests"
+  ) {
+    return <EditRequests />;
   }
 
 

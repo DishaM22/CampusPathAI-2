@@ -6,7 +6,18 @@ function LandingLogin() {
   const navigate = useNavigate();
 
   const [role, setRole] = useState("student");
-  const [darkMode, setDarkMode] = useState(true);
+  const [darkMode, setDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem("campuspath-theme");
+    return savedTheme ? savedTheme === "dark" : true;
+  });
+
+  // Keep the selected theme consistent with the whole application.
+  React.useEffect(() => {
+    const theme = darkMode ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("campuspath-theme", theme);
+    window.dispatchEvent(new CustomEvent("campuspath-theme-change", { detail: theme }));
+  }, [darkMode]);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -42,13 +53,31 @@ const [recoveryLoading, setRecoveryLoading] = useState(false);
       placeholder: "club@college.edu",
     },
 
-    intercollege: {
-      title: "Inter-College",
-      icon: "🌐",
+    faculty: {
+      title: "Faculty",
+      icon: "👩‍🏫",
       description:
-        "Log in to manage inter-college events and opportunities.",
-      emailLabel: "Organizer email or ID",
-      placeholder: "organizer@college.edu",
+        "Log in to supervise your club's events and review coordinator submissions.",
+      emailLabel: "Faculty email or ID",
+      placeholder: "faculty@college.edu",
+    },
+
+    hod: {
+      title: "HOD",
+      icon: "🧑‍🏫",
+      description:
+        "Log in to review and approve events submitted by clubs and organizers.",
+      emailLabel: "HOD email or ID",
+      placeholder: "hod@college.edu",
+    },
+
+    dean: {
+      title: "Dean",
+      icon: "🏛️",
+      description:
+        "Log in to give the second-stage review to events approved by the HOD.",
+      emailLabel: "Dean email or ID",
+      placeholder: "dean@college.edu",
     },
 
     admin: {
@@ -280,17 +309,30 @@ console.log("LOGIN RESPONSE:", data);
       }
 
       // ========================================================
-      // INTER-COLLEGE
+      // FACULTY
       // ========================================================
 
       if (
-        role === "intercollege"
-      ) {
+        role === "faculty" ) { navigate( "/faculty-dashboard" );
 
-        navigate(
-          "/intercollege-dashboard"
-        );
+        return;
+      }
 
+      // ========================================================
+      // HOD
+      // ========================================================
+
+      if (role === "hod") {
+        navigate("/hod-dashboard");
+        return;
+      }
+
+      // ========================================================
+      // DEAN
+      // ========================================================
+
+      if (role === "dean") {
+        navigate("/dean-dashboard");
         return;
       }
 
@@ -535,7 +577,7 @@ console.log("LOGIN RESPONSE:", data);
 
             <p className="built-for">
               Built for students, club leaders,
-              inter-college organizers &
+              faculty &
               university admins.
             </p>
 
@@ -554,11 +596,11 @@ console.log("LOGIN RESPONSE:", data);
 
             <button
               className="theme-button"
-              onClick={() =>
-                setDarkMode(!darkMode)
-              }
+              onClick={() => setDarkMode((current) => !current)}
               type="button"
-              aria-label="Toggle theme"
+              aria-label={`Switch to ${darkMode ? "light" : "dark"} mode`}
+              title={`Switch to ${darkMode ? "light" : "dark"} mode`}
+              aria-pressed={!darkMode}
             >
               {darkMode ? "☾" : "☀"}
             </button>
@@ -623,7 +665,9 @@ console.log("LOGIN RESPONSE:", data);
 
             <p className="redirect-message">
               You'll be redirected to your{" "}
-              {currentRole.title.toLowerCase()}
+              {role === "hod"
+                ? "HOD"
+                : currentRole.title.toLowerCase()}{" "}
               dashboard.
             </p>
 
@@ -845,10 +889,18 @@ console.log("LOGIN RESPONSE:", data);
               <button
                 type="button"
                 onClick={() =>
-                  navigate("/register")
+                  navigate(
+                    role === "hod"
+                      ? "/hod/register"
+                      : role === "dean"
+                        ? "/dean/register"
+                        : "/register"
+                  )
                 }
               >
-                Create an account
+                {role === "hod" || role === "dean"
+                  ? "Request access"
+                  : "Create an account"}
               </button>
 
             </div>

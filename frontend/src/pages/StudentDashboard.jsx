@@ -1,11 +1,17 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import StudentDashboardUI from "../features/studentDashboard/components/StudentDashboardUI";
-import TimetableEditPage from "../features/onboarding/timetable/TimetableEditPage";
+import {
+  ClassPrompt,
+  StudentClassTimetablePage,
+} from "../features/studentClass/StudentClass";
 import {
   prepareDashboardData,
 } from "../features/studentDashboard/services/recommendationEngine";
 import CampusAIBot from "../features/studentDashboard/components/CampusAIBot";
+import { AttendanceQRLauncher } from "../features/studentDashboard/components/Attendanceqr";
+import { logImpressions } from "../features/studentDashboard/services/interactionService";
+import StudentNotificationsBell from "../components/StudentNotificationsBell";
 
 // Route where the styled LandingLogin page is mounted
 const LANDING_PATH = "/";
@@ -51,6 +57,7 @@ function StudentDashboard() {
   const [registrations, setRegistrations] = useState({});
   const [savedEventIds, setSavedEventIds] = useState([]);
   const [timetable, setTimetable] = useState([]);
+  const [timetableMeta, setTimetableMeta] = useState(null);
 
   const [loading, setLoading] = useState(true);
   const [editingTimetable, setEditingTimetable] = useState(false);
@@ -382,6 +389,9 @@ console.log(
   timetableData ||
   []
 );
+        setTimetableMeta(
+          timetableData && timetableData.source ? timetableData : null
+        );
         /* =====================================================
            PREPARE DASHBOARD DATA
         ===================================================== */
@@ -451,6 +461,12 @@ const enrichOne = (item) => {
     report_pdf_url:
       own.report_pdf_url || full.report_pdf_url,
     capacity: own.capacity ?? full.capacity,
+    registration_required:
+      own.registration_required ?? full.registration_required,
+    registration_deadline:
+      own.registration_deadline ?? full.registration_deadline,
+    registration_closed:
+      own.registration_closed ?? full.registration_closed,
   };
 };
 
@@ -614,6 +630,36 @@ if (registrationsResponse.ok) {
   }, [navigate, reloadKey]);
 
   /* ==========================================================
+     PHASE A: tell the backend which events were SHOWN.
+     Fire-and-forget: this never throws and never blocks the UI.
+  ========================================================== */
+  useEffect(() => {
+    if (loading) return;
+
+    const idOf = (item) =>
+      String(
+        item?.event?._id ||
+          item?.event?.id ||
+          item?._id ||
+          item?.id ||
+          item?.event_id ||
+          ""
+      );
+
+    const recommendedIds = (dashboard.recommendations || [])
+      .map(idOf)
+      .filter(Boolean);
+
+    const upcomingIds = (dashboard.upcoming || [])
+      .map(idOf)
+      .filter(Boolean)
+      .slice(0, 20);
+
+    logImpressions(recommendedIds, "dashboard_recommended");
+    logImpressions(upcomingIds, "dashboard_upcoming");
+  }, [loading, dashboard]);
+
+  /* ==========================================================
      LOADING
   ========================================================== */
 
@@ -623,12 +669,14 @@ if (registrationsResponse.ok) {
 
   if (editingTimetable) {
     return (
-      <TimetableEditPage
-        onCancel={() => setEditingTimetable(false)}
-        onSaved={() => {
+      <StudentClassTimetablePage
+        onBack={(changed) => {
           setEditingTimetable(false);
-          setLoading(true);
-          setReloadKey((key) => key + 1);
+
+          if (changed) {
+            setLoading(true);
+            setReloadKey((key) => key + 1);
+          }
         }}
       />
     );
@@ -680,6 +728,20 @@ const handleLogout = () => {
       onEditTimetable={() => setEditingTimetable(true)}
       onLogout={handleLogout}
     />
+
+    <ClassPrompt
+      meta={timetableMeta}
+      onOpen={() => setEditingTimetable(true)}
+    />
+
+    <AttendanceQRLauncher
+      events={dashboard.events}
+      registrations={registrations}
+    />
+
+    <div className="mod-bell-fixed">
+      <StudentNotificationsBell />
+    </div>
 
     <CampusAIBot />
   </>

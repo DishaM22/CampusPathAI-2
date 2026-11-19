@@ -19,6 +19,12 @@ import {
   rejectApplication,
 } from "../adminService";
 
+import {
+  getKind,
+  getRole,
+  ROLE_LABEL,
+} from "../admin/applicationUtils";
+
 import "../admin-dashboard.css";
 
 
@@ -42,6 +48,44 @@ function DetailRow({
       </div>
 
     </div>
+  );
+}
+
+
+// ============================================================
+// DATE + TIME (backend sends UTC; show it in the viewer's time)
+// ============================================================
+
+function formatDateTime(value) {
+
+  if (!value) {
+    return "Date not available";
+  }
+
+  let text = String(value)
+    .trim()
+    .replace(" ", "T")
+    .replace(/(\.\d{3})\d+/, "$1");
+
+  if (!/(Z|[+-]\d{2}:?\d{2})$/.test(text)) {
+    text += "Z";
+  }
+
+  const date = new Date(text);
+
+  if (Number.isNaN(date.getTime())) {
+    return String(value);
+  }
+
+  return date.toLocaleString(
+    "en-IN",
+    {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    }
   );
 }
 
@@ -383,6 +427,27 @@ export default function ApplicationReview({
 
 
   // ==========================================================
+  // WHAT KIND OF APPLICATION IS THIS?
+  // ==========================================================
+
+  const role = getRole({
+    role:
+      app.role ||
+      app.applicant?.role ||
+      app.organization?.type,
+  });
+
+  const isFaculty = getKind({ role }) === "faculty";
+
+  const roleLabel = ROLE_LABEL[role] || "Club";
+
+  const unitLabel =
+    role === "dean"
+      ? "Faculty / School"
+      : "Department";
+
+
+  // ==========================================================
   // MAIN REVIEW PAGE
   // ==========================================================
 
@@ -456,21 +521,21 @@ export default function ApplicationReview({
             <div>
 
               <h1>
-                {app.organization?.name ||
-                  "Organization Application"}
+                {isFaculty
+                  ? `${roleLabel} Application`
+                  : app.organization?.name ||
+                    "Organization Application"}
               </h1>
 
               <p className="review-sub">
 
-                {app.organization?.type ===
-                "intercollege"
-                  ? "Inter-College"
-                  : "Club"}
+                {isFaculty
+                  ? `${app.applicant?.fullName || "Applicant"} · `
+                  : `${roleLabel} application · `}
 
-                {" application · Submitted "}
+                {"Submitted "}
 
-                {app.submittedAt ||
-                  "Date not available"}
+                {formatDateTime(app.submittedAt)}
 
               </p>
 
@@ -503,6 +568,101 @@ export default function ApplicationReview({
           ================================================= */}
 
           <div className="review-grid">
+
+            {isFaculty ? (
+              <>
+
+                {/* =============================================
+                    FACULTY / HOD / DEAN: APPLICANT
+                ============================================= */}
+
+                <section className="review-card">
+
+                  <h2>
+                    Applicant Information
+                  </h2>
+
+                  <div className="detail-list">
+
+                    <DetailRow
+                      label="Full Name"
+                      value={app.applicant?.fullName}
+                    />
+
+                    <DetailRow
+                      label="Role"
+                      value={roleLabel}
+                    />
+
+                    <DetailRow
+                      label="Designation"
+                      value={app.applicant?.designation}
+                    />
+
+                    <DetailRow
+                      label={unitLabel}
+                      value={app.applicant?.department}
+                    />
+
+                    <DetailRow
+                      label="College / University"
+                      value={app.applicant?.college}
+                    />
+
+                    <DetailRow
+                      label="Phone"
+                      value={app.applicant?.phone}
+                    />
+
+                  </div>
+
+                </section>
+
+
+                {/* =============================================
+                    FACULTY / HOD / DEAN: VERIFICATION
+                ============================================= */}
+
+                <section className="review-card">
+
+                  <h2>
+                    Verification Information
+                  </h2>
+
+                  <div className="detail-list">
+
+                    <DetailRow
+                      label="Institutional Email"
+                      value={app.applicant?.email}
+                    />
+
+                    <DetailRow
+                      label="Email Domain"
+                      value={app.applicant?.email?.split("@")[1]}
+                    />
+
+                    <DetailRow
+                      label="Employee ID"
+                      value={app.applicant?.employeeId}
+                    />
+
+                    <DetailRow
+                      label="Registration Status"
+                      value={app.applicationStatus}
+                    />
+
+                    <DetailRow
+                      label="Submitted On"
+                      value={formatDateTime(app.submittedAt)}
+                    />
+
+                  </div>
+
+                </section>
+
+              </>
+            ) : (
+              <>
 
 
             {/* =================================================
@@ -670,14 +830,15 @@ export default function ApplicationReview({
 
                 <DetailRow
                   label="Submitted On"
-                  value={
-                    app.submittedAt
-                  }
+                  value={formatDateTime(app.submittedAt)}
                 />
 
               </div>
 
             </section>
+
+              </>
+            )}
 
           </div>
 
@@ -753,8 +914,16 @@ export default function ApplicationReview({
 
       <ConfirmModal
         open={showApprove}
-        title="Approve Organization?"
-        message="Approving this application will activate the organization account and allow the representative to access the organizer dashboard and create events."
+        title={
+          isFaculty
+            ? `Approve ${roleLabel}?`
+            : "Approve Organization?"
+        }
+        message={
+          isFaculty
+            ? `Approving this application will activate ${app.applicant?.fullName || "this"} ${roleLabel} account so they can sign in and review events.`
+            : "Approving this application will activate the organization account and allow the representative to access the organizer dashboard and create events."
+        }
         confirmLabel="Approve"
         isSubmitting={isSubmitting}
         onCancel={() =>

@@ -349,14 +349,21 @@ function Login() {
                         : "Continue"}
                 </button>
 
-            </form>
+                        </form>
+
+            {/* HOD and Dean login links */}
+            <p>
+                Faculty?{" "}
+                <a href="/hod/login">HOD login</a>
+                {" · "}
+                <a href="/dean/login">Dean login</a>
+            </p>
 
             {message && (
                 <p>
                     {message}
                 </p>
             )}
-
         </div>
     );
 }

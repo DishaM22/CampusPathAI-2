@@ -27,6 +27,11 @@ otp_storage = {}
 # OTP validity period
 OTP_EXPIRY_SECONDS = 5 * 60
 
+# After a correct OTP the email counts as "verified" for this long, so the
+# registration request that follows can prove the OTP step really happened.
+VERIFIED_EMAIL_SECONDS = 15 * 60
+verified_emails = {}
+
 
 # ============================================================
 # SEND OTP EMAIL
@@ -153,4 +158,18 @@ def verify_otp(email: str, otp: str):
     # Delete OTP after successful verification
     del otp_storage[email]
 
+    # Remember that this email passed OTP verification (used by /api/register)
+    verified_emails[email] = time.time() + VERIFIED_EMAIL_SECONDS
+
     return True, "OTP verified successfully."
+
+
+# ============================================================
+# CONSUME A VERIFIED EMAIL
+# ============================================================
+
+def consume_verified_email(email: str) -> bool:
+    """True once if `email` recently passed verify_otp(); the proof is then used up."""
+    email = email.strip().lower()
+    expires_at = verified_emails.pop(email, None)
+    return expires_at is not None and time.time() <= expires_at

@@ -275,11 +275,12 @@ export default function AdminAnalytics() {
     const confirmed =
       registrations.filter(
         (registration) =>
-          String(
-            registration.status ||
-              "confirmed"
-          ).toLowerCase() ===
-          "confirmed"
+          ["confirmed", "registered"].includes(
+            String(
+              registration.status ||
+                "registered"
+            ).toLowerCase()
+          )
       ).length;
 
     const pending =
@@ -407,7 +408,7 @@ const clubRegistrations = registrations.filter((registration) =>
 
   if (loading) {
     return (
-      <div style={styles.app}>
+      <div className="admin-page" style={styles.app}>
         <Sidebar
           role="admin"
           orgName="CampusPath AI"
@@ -431,7 +432,7 @@ const clubRegistrations = registrations.filter((registration) =>
 
   if (error) {
     return (
-      <div style={styles.app}>
+      <div className="admin-page" style={styles.app}>
         <Sidebar
           role="admin"
           orgName="CampusPath AI"
@@ -490,7 +491,7 @@ const clubRegistrations = registrations.filter((registration) =>
   // ============================================================
 
   return (
-    <div style={styles.app}>
+    <div className="admin-page" style={styles.app}>
 
       {/* ======================================================
           SIDEBAR
@@ -589,6 +590,12 @@ const clubRegistrations = registrations.filter((registration) =>
           />
 
         </section>
+
+        {/* ==================================================
+            DOWNLOAD REPORTS (PDF)
+        ================================================== */}
+
+        <ReportsPanel />
 
         {/* ==================================================
             USER ANALYTICS
@@ -1030,8 +1037,8 @@ const clubRegistrations = registrations.filter((registration) =>
           <div
             key={eventId}
             style={{
-              background: "#111c2e",
-              border: "1px solid #2b3d56",
+              background: "var(--ap-card)",
+              border: "1px solid var(--ap-border)",
               borderRadius: "14px",
               padding: "22px",
               minWidth: 0,
@@ -1050,7 +1057,7 @@ const clubRegistrations = registrations.filter((registration) =>
               <div style={{ flex: "1 1 160px", minWidth: 0 }}>
                 <h4
                   style={{
-                    color: "#f1f5f9",
+                    color: "var(--ap-text)",
                     fontSize: "18px",
                     fontWeight: 700,
                     lineHeight: 1.4,
@@ -1063,7 +1070,7 @@ const clubRegistrations = registrations.filter((registration) =>
 
                 <p
                   style={{
-                    color: "#94a3b8",
+                    color: "var(--ap-muted)",
                     fontSize: "14px",
                     margin: "0 0 8px",
                   }}
@@ -1076,8 +1083,8 @@ const clubRegistrations = registrations.filter((registration) =>
                     display: "inline-block",
                     padding: "5px 10px",
                     borderRadius: "20px",
-                    background: "#1e293b",
-                    color: "#cbd5e1",
+                    background: "var(--ap-card2)",
+                    color: "var(--ap-text)",
                     fontSize: "12px",
                     textTransform: "capitalize",
                   }}
@@ -1092,14 +1099,14 @@ const clubRegistrations = registrations.filter((registration) =>
                   minWidth: "95px",
                   padding: "12px",
                   borderRadius: "10px",
-                  background: "#1b2b43",
+                  background: "var(--ap-card2)",
                   textAlign: "center",
                 }}
               >
-                <div style={{ fontSize: "27px", fontWeight: 800, color: "#ffffff" }}>
+                <div style={{ fontSize: "27px", fontWeight: 800, color: "var(--ap-text)" }}>
                   {eventRegistrations.length}
                 </div>
-                <div style={{ fontSize: "12px", color: "#93c5fd" }}>
+                <div style={{ fontSize: "12px", color: "var(--ap-acc-fg)" }}>
                   Registrations
                 </div>
               </div>
@@ -1108,7 +1115,7 @@ const clubRegistrations = registrations.filter((registration) =>
             <div
               style={{
                 height: "1px",
-                background: "#2b3d56",
+                background: "var(--ap-card2)",
                 margin: "20px 0 14px",
               }}
             />
@@ -1118,13 +1125,13 @@ const clubRegistrations = registrations.filter((registration) =>
                 display: "flex",
                 justifyContent: "space-between",
                 gap: "12px",
-                color: "#94a3b8",
+                color: "var(--ap-muted)",
                 fontSize: "13px",
                 flexWrap: "wrap",
               }}
             >
               <span>Event category</span>
-              <strong style={{ color: "#e2e8f0" }}>
+              <strong style={{ color: "var(--ap-text)" }}>
                 {event.category || "Not specified"}
               </strong>
             </div>
@@ -1167,9 +1174,9 @@ const clubRegistrations = registrations.filter((registration) =>
       maxWidth: "100%",
       padding: "12px 16px",
       borderRadius: "10px",
-      border: "1px solid #334155",
-      background: "#111c2e",
-      color: "#f1f5f9",
+      border: "1px solid var(--ap-border)",
+      background: "var(--ap-card)",
+      color: "var(--ap-text)",
       fontSize: "14px",
       boxSizing: "border-box",
     }}
@@ -1196,7 +1203,7 @@ const clubRegistrations = registrations.filter((registration) =>
           ...styles.summaryRow,
           cursor: "pointer",
           padding: "14px",
-          borderBottom: "1px solid #263449",
+          borderBottom: "1px solid var(--ap-border)",
         }}
         onClick={() => setSelectedClub(club)}
       >
@@ -1215,7 +1222,7 @@ const clubRegistrations = registrations.filter((registration) =>
       .toLowerCase()
       .includes(clubSearch.trim().toLowerCase())
   ).length === 0 && (
-    <p style={{ padding: "16px", color: "#94a3b8" }}>
+    <p style={{ padding: "16px", color: "var(--ap-muted)" }}>
       No clubs found matching "{clubSearch}".
     </p>
   )}
@@ -1409,11 +1416,373 @@ function EmptySmall({
 // STYLES
 // ============================================================
 
+// ============================================================
+// DOWNLOADABLE PDF REPORTS (department-wise / club-wise)
+// The PDFs are built by the backend (admin only) from published
+// events. They contain counts only, no student personal details.
+// ============================================================
+
+const reportStyles = {
+  dates: {
+    display: "flex",
+    gap: "16px",
+    flexWrap: "wrap",
+    marginBottom: "16px",
+  },
+  label: {
+    display: "block",
+    margin: "0 0 6px",
+    color: "var(--ap-acc-fg)",
+    fontSize: "12px",
+    fontWeight: 600,
+  },
+  field: {
+    width: "100%",
+    boxSizing: "border-box",
+    background: "var(--ap-card2)",
+    color: "var(--ap-text)",
+    border: "1px solid var(--ap-border)",
+    borderRadius: "8px",
+    padding: "10px 12px",
+    fontSize: "14px",
+  },
+  dateBox: {
+    minWidth: "190px",
+  },
+  note: {
+    color: "var(--ap-muted)",
+    fontSize: "12.5px",
+    margin: "0 0 14px",
+    lineHeight: 1.5,
+  },
+  button: {
+    marginTop: "14px",
+    background: "#7657ff",
+    border: "none",
+    color: "white",
+    borderRadius: "8px",
+    padding: "10px 18px",
+    cursor: "pointer",
+    fontWeight: 600,
+  },
+  buttonBusy: {
+    opacity: 0.6,
+    cursor: "wait",
+  },
+  error: {
+    color: "var(--ap-bad-fg)",
+    fontSize: "13px",
+    margin: "14px 0 0",
+  },
+  ok: {
+    color: "var(--ap-ok-fg)",
+    fontSize: "13px",
+    margin: "14px 0 0",
+  },
+};
+
+/* FastAPI errors can be a string or a list of {msg}; show either as text. */
+async function readReportError(response) {
+  let body = null;
+
+  try {
+    body = await response.json();
+  } catch {
+    body = null;
+  }
+
+  const detail = body?.detail;
+
+  if (typeof detail === "string") {
+    return detail;
+  }
+
+  if (Array.isArray(detail)) {
+    return detail
+      .map((item) => item?.msg || JSON.stringify(item))
+      .join("; ");
+  }
+
+  if (response.status === 403) {
+    return "Admin access is required to download reports.";
+  }
+
+  return `Report failed (${response.status}).`;
+}
+
+function ReportsPanel() {
+  const [options, setOptions] = useState({
+    departments: [],
+    clubs: [],
+  });
+  const [optionsError, setOptionsError] = useState("");
+
+  const [department, setDepartment] = useState("");
+  const [clubId, setClubId] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+
+  const [busy, setBusy] = useState("");
+  const [message, setMessage] = useState({ type: "", text: "" });
+
+  const authHeaders = () => {
+    const token = localStorage.getItem("token");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetch(`${API_BASE}/api/admin/reports/options`, {
+      headers: authHeaders(),
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(await readReportError(response));
+        }
+        return response.json();
+      })
+      .then((data) => {
+        if (cancelled) return;
+
+        setOptions({
+          departments: Array.isArray(data.departments)
+            ? data.departments
+            : [],
+          clubs: Array.isArray(data.clubs) ? data.clubs : [],
+        });
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          setOptionsError(
+            error.message || "Unable to load the department and club lists."
+          );
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function download(kind) {
+    if (dateFrom && dateTo && dateFrom > dateTo) {
+      setMessage({
+        type: "error",
+        text: "The start date must not be after the end date.",
+      });
+      return;
+    }
+
+    const params = new URLSearchParams();
+
+    if (kind === "department" && department) {
+      params.set("department", department);
+    }
+    if (kind === "club" && clubId) {
+      params.set("club_id", clubId);
+    }
+    if (dateFrom) params.set("date_from", dateFrom);
+    if (dateTo) params.set("date_to", dateTo);
+
+    setBusy(kind);
+    setMessage({ type: "", text: "" });
+
+    try {
+      const response = await fetch(
+        `${API_BASE}/api/admin/reports/${kind}?${params.toString()}`,
+        { headers: authHeaders() }
+      );
+
+      if (!response.ok) {
+        throw new Error(await readReportError(response));
+      }
+
+      const blob = await response.blob();
+
+      const disposition =
+        response.headers.get("Content-Disposition") || "";
+      const nameMatch = disposition.match(/filename="?([^";]+)"?/i);
+      const filename = nameMatch
+        ? nameMatch[1]
+        : `CampusPathAI_${kind}_report.pdf`;
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+      setMessage({ type: "ok", text: `Downloaded ${filename}` });
+    } catch (error) {
+      setMessage({
+        type: "error",
+        text:
+          error instanceof TypeError
+            ? "Unable to reach the server."
+            : error.message || "Unable to download the report.",
+      });
+    } finally {
+      setBusy("");
+    }
+  }
+
+  return (
+    <section style={styles.section}>
+      <div style={styles.sectionHeader}>
+        <div>
+          <h2 style={styles.sectionTitle}>Download Reports</h2>
+
+          <p style={styles.sectionSubtitle}>
+            PDF reports of published events with registration and
+            attendance numbers. No student names or contact details are
+            included.
+          </p>
+        </div>
+      </div>
+
+      <div style={reportStyles.dates}>
+        <div style={reportStyles.dateBox}>
+          <label style={reportStyles.label} htmlFor="report-from">
+            Events from (optional)
+          </label>
+          <input
+            id="report-from"
+            type="date"
+            style={reportStyles.field}
+            value={dateFrom}
+            onChange={(event) => setDateFrom(event.target.value)}
+          />
+        </div>
+
+        <div style={reportStyles.dateBox}>
+          <label style={reportStyles.label} htmlFor="report-to">
+            Events until (optional)
+          </label>
+          <input
+            id="report-to"
+            type="date"
+            style={reportStyles.field}
+            value={dateTo}
+            onChange={(event) => setDateTo(event.target.value)}
+          />
+        </div>
+      </div>
+
+      <div style={styles.analyticsGrid}>
+        <div style={styles.panel}>
+          <h3 style={styles.panelTitle}>Department-wise report</h3>
+
+          <p style={reportStyles.note}>
+            Events each department organised, and how its own students
+            took part. Choose "All departments" for one PDF with every
+            department.
+          </p>
+
+          <label style={reportStyles.label} htmlFor="report-department">
+            Department
+          </label>
+          <select
+            id="report-department"
+            style={reportStyles.field}
+            value={department}
+            onChange={(event) => setDepartment(event.target.value)}
+          >
+            <option value="">All departments</option>
+            {options.departments.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </select>
+
+          <button
+            type="button"
+            style={{
+              ...reportStyles.button,
+              ...(busy ? reportStyles.buttonBusy : {}),
+            }}
+            disabled={!!busy}
+            onClick={() => download("department")}
+          >
+            {busy === "department"
+              ? "Preparing PDF…"
+              : "⬇ Download department report (PDF)"}
+          </button>
+        </div>
+
+        <div style={styles.panel}>
+          <h3 style={styles.panelTitle}>Club-wise report</h3>
+
+          <p style={reportStyles.note}>
+            Events, registrations and attendance for each club. Choose
+            "All clubs" for one PDF with every club.
+          </p>
+
+          <label style={reportStyles.label} htmlFor="report-club">
+            Club
+          </label>
+          <select
+            id="report-club"
+            style={reportStyles.field}
+            value={clubId}
+            onChange={(event) => setClubId(event.target.value)}
+          >
+            <option value="">All clubs</option>
+            {options.clubs.map((club) => (
+              <option key={club.id} value={club.id}>
+                {club.name}
+                {club.college ? ` - ${club.college}` : ""}
+              </option>
+            ))}
+          </select>
+
+          <button
+            type="button"
+            style={{
+              ...reportStyles.button,
+              ...(busy ? reportStyles.buttonBusy : {}),
+            }}
+            disabled={!!busy}
+            onClick={() => download("club")}
+          >
+            {busy === "club"
+              ? "Preparing PDF…"
+              : "⬇ Download club report (PDF)"}
+          </button>
+        </div>
+      </div>
+
+      {optionsError && (
+        <p style={reportStyles.error}>
+          Could not load the department and club lists: {optionsError}.
+          You can still download the "All" reports.
+        </p>
+      )}
+
+      {message.text && (
+        <p
+          style={
+            message.type === "error"
+              ? reportStyles.error
+              : reportStyles.ok
+          }
+        >
+          {message.text}
+        </p>
+      )}
+    </section>
+  );
+}
+
 const styles = {
   app: {
     minHeight: "100vh",
-    background: "#0b1220",
-    color: "#f8fafc",
+    background: "var(--ap-card2)",
+    color: "var(--ap-text)",
     display: "flex",
     fontFamily:
       "Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
@@ -1443,14 +1812,14 @@ const styles = {
 
   subtitle: {
     margin: "8px 0 0",
-    color: "#8fa3c2",
+    color: "var(--ap-muted)",
     fontSize: "14px",
   },
 
   refreshButton: {
-    background: "#111a2b",
-    color: "#f8fafc",
-    border: "1px solid #30405c",
+    background: "var(--ap-card)",
+    color: "var(--ap-text)",
+    border: "1px solid var(--ap-border)",
     borderRadius: "8px",
     padding: "10px 16px",
     cursor: "pointer",
@@ -1466,8 +1835,8 @@ const styles = {
   },
 
   metricCard: {
-    background: "#111a2b",
-    border: "1px solid #293954",
+    background: "var(--ap-card)",
+    border: "1px solid var(--ap-border)",
     borderRadius: "12px",
     padding: "20px",
     display: "flex",
@@ -1479,7 +1848,7 @@ const styles = {
     width: "42px",
     height: "42px",
     borderRadius: "10px",
-    background: "#1b2740",
+    background: "var(--ap-card2)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -1487,7 +1856,7 @@ const styles = {
   },
 
   metricLabel: {
-    color: "#8fa3c2",
+    color: "var(--ap-muted)",
     fontSize: "13px",
     marginBottom: "5px",
   },
@@ -1516,14 +1885,14 @@ const styles = {
 
   sectionSubtitle: {
     margin: "5px 0 0",
-    color: "#7185a5",
+    color: "var(--ap-muted)",
     fontSize: "13px",
   },
 
   secondaryButton: {
-    background: "#111a2b",
-    color: "#aabaff",
-    border: "1px solid #39496b",
+    background: "var(--ap-card)",
+    color: "var(--ap-acc-fg)",
+    border: "1px solid var(--ap-border)",
     borderRadius: "8px",
     padding: "9px 14px",
     cursor: "pointer",
@@ -1537,8 +1906,8 @@ const styles = {
   },
 
   panel: {
-    background: "#111a2b",
-    border: "1px solid #293954",
+    background: "var(--ap-card)",
+    border: "1px solid var(--ap-border)",
     borderRadius: "12px",
     padding: "22px",
   },
@@ -1557,13 +1926,13 @@ const styles = {
     justifyContent: "space-between",
     marginBottom: "8px",
     fontSize: "13px",
-    color: "#b8c5d9",
+    color: "var(--ap-text)",
   },
 
   barBackground: {
     height: "8px",
     borderRadius: "20px",
-    background: "#202c42",
+    background: "var(--ap-card2)",
     overflow: "hidden",
   },
 
@@ -1580,7 +1949,7 @@ const styles = {
     alignItems: "center",
     justifyContent: "space-between",
     padding: "14px 0",
-    borderBottom: "1px solid #202d43",
+    borderBottom: "1px solid var(--ap-border)",
   },
 
   statusLabel: {
@@ -1589,7 +1958,7 @@ const styles = {
   },
 
   statusCount: {
-    color: "#7185a5",
+    color: "var(--ap-muted)",
     fontSize: "12px",
     marginTop: "4px",
   },
@@ -1599,13 +1968,13 @@ const styles = {
     alignItems: "center",
     justifyContent: "space-between",
     padding: "16px 0",
-    borderBottom: "1px solid #202d43",
-    color: "#9aabc4",
+    borderBottom: "1px solid var(--ap-border)",
+    color: "var(--ap-muted)",
   },
 
   registrationPanel: {
-    background: "#111a2b",
-    border: "1px solid #293954",
+    background: "var(--ap-card)",
+    border: "1px solid var(--ap-border)",
     borderRadius: "12px",
     padding: "24px",
   },
@@ -1619,14 +1988,14 @@ const styles = {
   },
 
   registrationStat: {
-    background: "#0d1626",
-    border: "1px solid #263650",
+    background: "var(--ap-card)",
+    border: "1px solid var(--ap-border)",
     borderRadius: "10px",
     padding: "16px",
   },
 
   distribution: {
-    borderTop: "1px solid #263650",
+    borderTop: "1px solid var(--ap-border)",
     paddingTop: "22px",
   },
 
@@ -1639,27 +2008,27 @@ const styles = {
     justifyContent: "space-between",
     marginBottom: "7px",
     fontSize: "13px",
-    color: "#aebdd2",
+    color: "var(--ap-text)",
   },
 
   emptyPanel: {
     minHeight: "250px",
-    background: "#111a2b",
-    border: "1px solid #293954",
+    background: "var(--ap-card)",
+    border: "1px solid var(--ap-border)",
     borderRadius: "12px",
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
     textAlign: "center",
-    color: "#7185a5",
+    color: "var(--ap-muted)",
   },
 
   emptyIcon: {
     width: "58px",
     height: "58px",
     borderRadius: "50%",
-    background: "#1b2940",
+    background: "var(--ap-card2)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -1668,7 +2037,7 @@ const styles = {
   },
 
   emptySmall: {
-    color: "#7185a5",
+    color: "var(--ap-muted)",
     fontSize: "14px",
     padding: "20px 0",
   },
@@ -1678,14 +2047,14 @@ const styles = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    color: "#8fa3c2",
+    color: "var(--ap-muted)",
     fontSize: "16px",
   },
 
   errorBox: {
     marginTop: "60px",
-    background: "#111a2b",
-    border: "1px solid #63333a",
+    background: "var(--ap-card)",
+    border: "1px solid var(--ap-bad-border)",
     borderRadius: "12px",
     padding: "40px",
     textAlign: "center",

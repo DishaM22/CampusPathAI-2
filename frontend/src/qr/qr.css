@@ -1,0 +1,50 @@
+.cpqr-card {
+  --cpqr-line: rgba(127, 127, 127, 0.35);
+  --cpqr-ok: #1b7a46;
+  --cpqr-done: #3a55a8;
+  --cpqr-bad: #b3261e;
+  max-width: 320px;
+  padding: 16px;
+  border: 1px solid var(--cpqr-line);
+  border-radius: 10px;
+}
+.cpqr-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.cpqr-head h3 { margin: 0; font-size: 1rem; }
+.cpqr-sub, .cpqr-note { margin: 6px 0 0; font-size: 0.85rem; opacity: 0.8; line-height: 1.4; }
+.cpqr-badge { font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+.cpqr-ok { color: var(--cpqr-ok); }
+.cpqr-done { color: var(--cpqr-done); }
+.cpqr-bad { color: var(--cpqr-bad); }
+
+/* A QR must always be dark-on-white to scan, whatever the page theme. */
+.cpqr-frame { margin: 12px auto; padding: 8px; width: 100%; max-width: 260px; background: #fff; border-radius: 6px; }
+.cpqr-frame svg { display: block; width: 100%; height: auto; }
+.cpqr-dim { opacity: 0.35; filter: grayscale(1); }
+
+.cpqr-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.cpqr-card button, .cpqr-state button, .cpqr-dialog-head button {
+  min-height: 40px; padding: 0 14px; border-radius: 6px; font: inherit; cursor: pointer;
+  border: 1px solid transparent; background: #2457c5; color: #fff;
+}
+.cpqr-card button.cpqr-secondary, .cpqr-state button.cpqr-secondary, .cpqr-dialog-head button.cpqr-secondary {
+  background: transparent; color: inherit; border-color: var(--cpqr-line);
+}
+.cpqr-card button:focus-visible, .cpqr-state button:focus-visible, .cpqr-dialog-head button:focus-visible {
+  outline: 3px solid #f0a500; outline-offset: 2px;
+}
+.cpqr-error { color: var(--cpqr-bad, #b3261e); font-size: 0.85rem; margin: 8px 0 0; }
+.cpqr-state { font-size: 0.9rem; margin: 8px 0; }
+
+/* Pop-up (matches the dashboard's dark theme) */
+.cpqr-overlay {
+  position: fixed; inset: 0; z-index: 2147483000; display: grid; place-items: center;
+  padding: 16px; background: rgba(5, 8, 20, 0.7);
+}
+.cpqr-dialog {
+  width: 100%; max-width: 360px; max-height: calc(100vh - 32px); overflow: auto;
+  padding: 16px; border-radius: 14px; background: #121935; color: #e8ecff; border: 1px solid #27315f;
+}
+.cpqr-dialog .cpqr-card { max-width: none; padding: 0; border: 0; --cpqr-ok: #34d399; --cpqr-done: #93b4ff; --cpqr-bad: #f87171; }
+.cpqr-dialog-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.cpqr-dialog-head h2 { margin: 0; font-size: 1.1rem; }
+@media (max-width: 480px) { .cpqr-card { max-width: 100%; } }

@@ -38,8 +38,13 @@ async function request(path, options = {}) {
   }
 
   if (!response.ok) {
+    const detail = data?.detail;
+
+    // FastAPI sends validation errors as a list; show them as text.
     const message =
-      data?.detail ||
+      (typeof detail === "string" && detail) ||
+      (Array.isArray(detail) &&
+        detail.map((item) => item?.msg || JSON.stringify(item)).join("; ")) ||
       data?.message ||
       `Request failed (${response.status})`;
 
@@ -86,6 +91,28 @@ export async function fetchAdminUsers() {
   console.log("ADMIN USERS RESPONSE:", data);
 
   return data;
+}
+
+
+// ============================================================
+// BULK USER ACTIONS (Users page checkboxes)
+// POST /api/admin/users/bulk-status  { ids, action: "activate" | "disable" }
+// POST /api/admin/users/bulk-delete  { ids, confirm: "DELETE" }
+// ============================================================
+
+export function bulkUpdateUserStatus(ids, action) {
+  return request("/api/admin/users/bulk-status", {
+    method: "POST",
+    body: JSON.stringify({ ids, action }),
+  });
+}
+
+export function bulkDeleteUsers(ids) {
+  // The page only calls this after the admin typed DELETE.
+  return request("/api/admin/users/bulk-delete", {
+    method: "POST",
+    body: JSON.stringify({ ids, confirm: "DELETE" }),
+  });
 }
 
 
@@ -320,4 +347,33 @@ export async function fetchAdminActivityLogs() {
   );
 
   return data;
+}
+
+
+// ============================================================
+// EVENT APPROVALS (HOD -> Dean -> Admin)
+// GET  /api/approvals/events
+// POST /api/approvals/events/:id/review
+// ============================================================
+
+export async function fetchEventApprovals() {
+  const data = await request("/api/approvals/events");
+
+  console.log("EVENT APPROVALS RESPONSE:", data);
+
+  return data;
+}
+
+export async function reviewEvent(id, decision, remarks = "") {
+  if (!id) {
+    throw new Error("Event ID is required.");
+  }
+
+  return request(
+    `/api/approvals/events/${encodeURIComponent(id)}/review`,
+    {
+      method: "POST",
+      body: JSON.stringify({ decision, remarks }),
+    }
+  );
 }

@@ -442,7 +442,7 @@
   display: grid;
 
   grid-template-columns:
-    repeat(4, 1fr);
+    repeat(3, 1fr);
 
   gap: 8px;
 }
@@ -1023,4 +1023,3 @@
 .recovery-panel .recovery-error {
   color: #f87171;
 }
-

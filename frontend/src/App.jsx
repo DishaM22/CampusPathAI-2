@@ -1,3 +1,5 @@
+import "./index.css";
+//import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 // ============================================================
@@ -34,6 +36,7 @@ import {
   MyClub,
   CreateEvent,
   MyEvents,
+  EditRequests,
   Registrations,
   CalendarPage,
   Analytics,
@@ -59,14 +62,25 @@ import AdminAnalytics from "./pages/AdminAnalytics";
 import AdminNotifications from "./pages/AdminNotifications";
 import AdminActivityLogs from "./pages/AdminActivityLogs";
 import AdminSettings from "./pages/AdminSettings";
+import AdminClasses, { AdminTimetableEditor, AdminTimetableImport } from "./pages/AdminClassTimetable";
 
+import HODDashboard from "./pages/HODDashboard";
+import DeanDashboard from "./pages/DeanDashboard";
+import HODLogin from "./pages/HODLogin";
+import HODRegister from "./pages/HODRegister";
+import DeanLogin from "./pages/DeanLogin";
+import DeanRegister from "./pages/DeanRegister";
 
 import InterCollegeDashboard from "./pages/InterCollegeDashboard";
+
+
+import { ThemeProvider } from "./context/ThemeContext";
 function App() {
   return (
-    <BrowserRouter>
-
-      <Routes>
+    <ThemeProvider>
+      <div className="app-theme-root">
+        <BrowserRouter>
+          <Routes>
 
         {/* =====================================================
             LANDING / AUTH
@@ -195,11 +209,13 @@ function App() {
   path="/club-dashboard/events/:id"
   element={<ClubEventView />}
 />
+  <Route path="edit-requests" element={<EditRequests />} />
 
 <Route
   path="/club-dashboard/events/:id/edit"
   element={<EditEvent />}
 />
+
 </Route>
         {/* =====================================================
             ADMIN DASHBOARD
@@ -300,17 +316,35 @@ function App() {
           element={<AdminSettings />}
         />
 
+    <Route path="/admin/classes" element={<AdminClasses />} />
+    <Route path="/admin/classes/:id/timetable" element={<AdminTimetableEditor />} />
+       <Route path="/admin/classes/import" element={<AdminTimetableImport />} />
+
+
+<Route path="/hod-dashboard" element={<HODDashboard />} />
+<Route path="/dean-dashboard" element={<DeanDashboard />} />
+<Route path="/hod/login" element={<HODLogin />} />
+<Route path="/hod/register" element={<HODRegister />} />
+<Route path="/dean/login" element={<DeanLogin />} />
+<Route path="/dean/register" element={<DeanRegister />} />
 {/* =====================================================
     INTER-COLLEGE DASHBOARD
 ===================================================== */}
 
         <Route
+          path="/faculty-dashboard"
+          element={<InterCollegeDashboard />}
+        />
+
+        {/* old Inter-College route now opens the Faculty dashboard */}
+        <Route
           path="/intercollege-dashboard"
           element={<InterCollegeDashboard />}
         />
-      </Routes>
-
-    </BrowserRouter>
+                </Routes>
+        </BrowserRouter>
+      </div>
+    </ThemeProvider>
   );
 }
 

@@ -1,0 +1,245 @@
+/* Attendanceqr.css
+ * Styles for Attendanceqr.jsx only. Every selector starts with ".aqr-"
+ * so nothing else in the app is affected.
+ */
+
+/* ---------- floating button ---------- */
+.aqr-fab {
+  position: fixed;
+  left: 20px;
+  bottom: 20px;
+  z-index: 900;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 16px;
+  border: 1px solid #3b3f8f;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #5b4bff, #3b82f6);
+  color: #fff;
+  font: 600 14px Inter, system-ui, sans-serif;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(59, 66, 200, 0.35);
+}
+
+.aqr-fab:hover {
+  filter: brightness(1.1);
+}
+
+.aqr-badge {
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #fff;
+  color: #3b3f8f;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+}
+
+/* ---------- pop-up ---------- */
+.aqr-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(4, 8, 20, 0.72);
+}
+
+.aqr-modal {
+  position: relative;
+  width: min(440px, 100%);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  padding: 26px 24px 22px;
+  border: 1px solid #27315f;
+  border-radius: 18px;
+  background: #121935;
+  color: #e8ecff;
+  font: 14px/1.5 Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  box-sizing: border-box;
+}
+
+.aqr-modal * {
+  box-sizing: border-box;
+}
+
+.aqr-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #9aa6d1;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.aqr-close:hover {
+  background: #1a2250;
+  color: #fff;
+}
+
+.aqr-back {
+  margin: 0 0 10px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #9db4ff;
+  font: 600 13px Inter, system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.aqr-title {
+  margin: 0 28px 4px 0;
+  font-size: 20px;
+  line-height: 1.3;
+}
+
+.aqr-when {
+  margin: 0 0 14px;
+  color: #9aa6d1;
+}
+
+.aqr-sub,
+.aqr-note {
+  margin: 8px 0 0;
+  color: #9aa6d1;
+  font-size: 13px;
+}
+
+/* ---------- the QR itself ---------- */
+.aqr-pass {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.aqr-pass .aqr-title {
+  margin-right: 0;
+}
+
+.aqr-frame {
+  margin: 6px 0 14px;
+  padding: 10px;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.aqr-img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+}
+
+.aqr-fallback {
+  margin: 8px 0;
+  padding: 12px;
+  border: 1px dashed #3b3f8f;
+  border-radius: 12px;
+  color: #cbd5e1;
+  font-size: 13px;
+}
+
+.aqr-code {
+  display: block;
+  margin-top: 8px;
+  word-break: break-all;
+  color: #fff;
+  font-size: 13px;
+}
+
+/* ---------- buttons ---------- */
+.aqr-btn {
+  display: inline-block;
+  padding: 9px 16px;
+  border: 1px solid #3b3f8f;
+  border-radius: 10px;
+  background: #1a2250;
+  color: #e8ecff;
+  font: 600 13px Inter, system-ui, sans-serif;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.aqr-btn:hover {
+  background: #232d6b;
+}
+
+.aqr-item .aqr-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* ---------- list of events ---------- */
+.aqr-list {
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.aqr-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid #27315f;
+  border-radius: 12px;
+  background: #0f1630;
+}
+
+.aqr-item-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.aqr-item-text strong {
+  overflow-wrap: anywhere;
+}
+
+.aqr-item-text span {
+  color: #9aa6d1;
+  font-size: 12.5px;
+}
+
+.aqr-empty {
+  margin: 18px 0 4px;
+  padding: 14px;
+  border: 1px dashed #27315f;
+  border-radius: 12px;
+  color: #9aa6d1;
+  text-align: center;
+}
+
+/* ---------- errors ---------- */
+.aqr-error {
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  border: 1px solid #7a2a3d;
+  border-radius: 12px;
+  background: #3a1520;
+  color: #f87171;
+}
+
+.aqr-error p {
+  margin: 0 0 10px;
+}
+
+@media (max-width: 480px) {
+  .aqr-fab {
+    left: 12px;
+    bottom: 12px;
+  }
+}

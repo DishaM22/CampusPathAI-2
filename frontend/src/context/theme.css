@@ -1,0 +1,11 @@
+:root {
+  --bg:            #F9F6EF;  /* champagne background */
+  --card:          #FFFFFF;
+  --sidebar:       #EDE2D6;  /* beige sidebar */
+  --primary:       #B8775A;  /* terracotta */
+  --primary-hover: #A3644A;
+  --primary-soft:  #F3E3DA;  /* welcome banner, badges */
+  --text:          #4E3A32;  /* brown text */
+  --text-muted:    #8A7469;
+  --border:        #E6DACD;
+}

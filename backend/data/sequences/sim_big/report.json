@@ -1,0 +1,74 @@
+{
+  "generated_at": "2026-11-06T05:39:58.943870+00:00",
+  "settings": {
+    "actions": [
+      "view",
+      "save",
+      "unsave",
+      "register",
+      "unregister",
+      "attend",
+      "not_interested"
+    ],
+    "max_len": 30,
+    "min_len": 3,
+    "train_frac": 0.7,
+    "val_frac": 0.15,
+    "max_targets": 10,
+    "window_stride": 15
+  },
+  "cutoffs": {
+    "train_end": "2026-09-27T03:00:11.971000+00:00",
+    "val_end": "2026-10-11T01:12:41.719000+00:00",
+    "note": "train < train_end <= validation < val_end <= test"
+  },
+  "rows": {
+    "read": 6762,
+    "used": 6762,
+    "left_out_by_action_filter": 0,
+    "invalid": 0,
+    "by_action": {
+      "attend": 567,
+      "not_interested": 781,
+      "register": 878,
+      "save": 771,
+      "unregister": 48,
+      "unsave": 51,
+      "view": 3666
+    }
+  },
+  "students": {
+    "with_interactions": 600,
+    "real": 0,
+    "simulated": 600,
+    "real_with_at_least_min_len_interactions": 0
+  },
+  "sequences": {
+    "train": {
+      "total": 505,
+      "real": 0,
+      "simulated": 505
+    },
+    "val": {
+      "total": 259,
+      "real": 0,
+      "simulated": 259
+    },
+    "test": {
+      "total": 205,
+      "real": 0,
+      "simulated": 205
+    }
+  },
+  "vocab_sizes": {
+    "actions": 10,
+    "categories": 9,
+    "organizers": 7
+  },
+  "unseen_in_evaluation_targets": {
+    "categories_not_in_train_vocab": 0.0,
+    "organizers_not_in_train_vocab": 0.0
+  },
+  "contains_simulated_data": true,
+  "data_source": "simulated"
+}

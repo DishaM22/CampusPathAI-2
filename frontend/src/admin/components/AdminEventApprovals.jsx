@@ -1,0 +1,637 @@
+import React, { useEffect, useMemo, useState } from "react";
+import { fetchEventApprovals, reviewEvent } from "../../adminService";
+import { reviewEventWithAudience } from "../../audienceService";
+import PublishAudiencePicker, {
+  EMPTY_AUDIENCE,
+  audienceError,
+} from "./PublishAudiencePicker";
+import PublishedEventAudiences from "./PublishedEventAudiences";
+import { reviewModificationDecision } from "../../modificationService";
+import ModificationCompare, {
+  rowsFromQueueItem,
+} from "../../components/modifications/ModificationCompare";
+
+const API_BASE = "http://127.0.0.1:8000";
+
+const ROLE_LABEL = { hod: "HOD", dean: "Dean", admin: "Admin" };
+
+// Backend stores files as "/uploads/..."; the browser needs a full address.
+function fileSrc(url) {
+  if (!url) return "";
+  const text = String(url);
+  if (/^(https?:|blob:)/i.test(text)) return text;
+  return `${API_BASE.replace(/\/$/, "")}/${text.replace(/^\//, "")}`;
+}
+
+const skillList = (skills) =>
+  Array.isArray(skills)
+    ? skills.filter(Boolean)
+    : String(skills || "")
+        .split(",")
+        .map((x) => x.trim())
+        .filter(Boolean);
+
+const eventId = (e) => String(e._id || e.id || "");
+
+function decisionBadge(decision) {
+  const cls =
+    decision === "approved"
+      ? "status-published"
+      : decision === "changes"
+      ? "status-pending"
+      : "status-cancelled";
+  const label =
+    decision === "approved"
+      ? "Approved"
+      : decision === "changes"
+      ? "Changes requested"
+      : "Rejected";
+  return <span className={`status-badge ${cls}`}>{label}</span>;
+}
+
+export default function AdminEventApprovals({ embedded = false, onChanged }) {
+  // Embedded inside the dashboard's <main className="content">, so no extra wrapper.
+  const Wrap = embedded ? React.Fragment : "div";
+  const wrapProps = embedded ? {} : { className: "content" };
+  const [queue, setQueue] = useState([]);
+  const [reviewed, setReviewed] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState(null); // event being viewed
+  const [modal, setModal] = useState(null); // { event, decision }
+  const [remarks, setRemarks] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [modalError, setModalError] = useState("");
+  const [audience, setAudience] = useState({ ...EMPTY_AUDIENCE });
+  const [shareReason, setShareReason] = useState(false);
+
+  async function load() {
+    try {
+      setLoading(true);
+      setError("");
+      const data = await fetchEventApprovals();
+      setQueue(data.queue || []);
+      setReviewed(data.reviewed || []);
+    } catch (err) {
+      setError(err.message || "Failed to load event approvals.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return queue;
+    return queue.filter((e) =>
+      `${e.title || ""} ${e.organizer || ""}`.toLowerCase().includes(q)
+    );
+  }, [queue, search]);
+
+  function openModal(event, decision) {
+    setModal({ event, decision });
+    setAudience({ ...EMPTY_AUDIENCE });
+    setShareReason(false);
+    setRemarks("");
+    setModalError("");
+  }
+
+  async function submit() {
+    const { event, decision } = modal;
+    if (decision !== "approved" && remarks.trim().length < 10) {
+      setModalError("Please enter at least 10 characters of remarks.");
+      return;
+    }
+    try {
+      setBusy(true);
+      setModalError("");
+      if (decision === "approved" && event.is_modification) {
+        // A modification keeps the event's existing audience; this approval
+        // applies the approved changes to the live event.
+        await reviewModificationDecision(
+          eventId(event),
+          decision,
+          remarks.trim(),
+          shareReason
+        );
+      } else if (decision === "approved") {
+        const problem = audienceError(audience);
+        if (problem) {
+          setModalError(problem);
+          setBusy(false);
+          return;
+        }
+        await reviewEventWithAudience(
+          eventId(event),
+          decision,
+          remarks.trim(),
+          audience
+        );
+      } else {
+        await reviewEvent(eventId(event), decision, remarks.trim());
+      }
+      setModal(null);
+      setSelected(null);
+      await load();
+      if (onChanged) onChanged();
+    } catch (err) {
+      setModalError(err.message || "Could not save the decision.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const history = (e) => e.approval_history || [];
+
+  // ---------------- detail view ----------------
+  if (selected) {
+    const e = selected;
+    return (
+      <Wrap {...wrapProps}>
+        <button className="back-link" onClick={() => setSelected(null)}>
+          ← Back to approvals
+        </button>
+
+        <div className="review-head">
+          <div>
+            <h1>{e.title}</h1>
+            <p className="review-sub">
+              {e.organizer || "—"} · {e.date || "—"} {e.time || ""} ·{" "}
+              {e.location || "—"}
+            </p>
+          </div>
+          <span className="status-badge status-pending">
+            Awaiting Admin (v{e.submission_version || 1})
+          </span>
+        </div>
+
+        {e.poster_url && (
+          <>
+            <div className="section-head">
+              <h2>Poster</h2>
+            </div>
+            <a
+              href={fileSrc(e.poster_url)}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <img
+                src={fileSrc(e.poster_url)}
+                alt={`${e.title} poster`}
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: 360,
+                  borderRadius: 10,
+                  border: "1px solid var(--border)",
+                }}
+              />
+            </a>
+          </>
+        )}
+
+        <div className="section-head">
+          <h2>Event details</h2>
+        </div>
+        <div
+          className="table-wrap"
+          style={{ padding: 18 }}
+        >
+          <dl className="detail-list">
+            {[
+              ["Category", e.category],
+              ["Organizer", e.organizer],
+              ["Date", e.date],
+              ["Time", e.time],
+              ["Venue", e.location || e.venue],
+              [
+                "Capacity",
+                e.capacity !== undefined && e.capacity !== null && e.capacity !== ""
+                  ? e.capacity
+                  : null,
+              ],
+              ["Submitted version", `v${e.submission_version || 1}`],
+              [
+                "Created on",
+                e.created_at
+                  ? new Date(e.created_at).toLocaleString()
+                  : null,
+              ],
+              ["Created by (ID)", e.created_by ? String(e.created_by) : null],
+              ["Event ID", eventId(e)],
+            ].map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value || "—"}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+
+        <div className="section-head">
+          <h2>Description</h2>
+        </div>
+        <p
+          className="modal-message"
+          style={{ whiteSpace: "pre-wrap" }}
+        >
+          {e.description || "No description."}
+        </p>
+
+        <div className="section-head">
+          <h2>Skills / topics</h2>
+        </div>
+        {skillList(e.skills).length === 0 ? (
+          <p className="modal-message">No skills listed.</p>
+        ) : (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {skillList(e.skills).map((skill) => (
+              <span key={skill} className="status-badge status-completed">
+                {skill}
+              </span>
+            ))}
+          </div>
+        )}
+
+        <div className="section-head">
+          <h2>Resource persons</h2>
+        </div>
+        {(e.resource_persons || []).length === 0 ? (
+          <p className="modal-message">No resource persons added.</p>
+        ) : (
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Designation</th>
+                  <th>Organization</th>
+                  <th>LinkedIn</th>
+                </tr>
+              </thead>
+              <tbody>
+                {e.resource_persons.map((person, i) => (
+                  <tr key={i}>
+                    <td>{person.name || "—"}</td>
+                    <td>{person.designation || "—"}</td>
+                    <td>{person.organization || "—"}</td>
+                    <td>
+                      {person.linkedin_url ? (
+                        <a
+                          className="link"
+                          href={person.linkedin_url}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Profile ↗
+                        </a>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {e.report_pdf_url && (
+          <>
+            <div className="section-head">
+              <h2>Event report</h2>
+            </div>
+            <div className="document-row">
+              <span className="doc-icon">📄</span>
+              <span className="doc-name">Event report (PDF)</span>
+              <a
+                className="link"
+                href={fileSrc(e.report_pdf_url)}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Open ↗
+              </a>
+            </div>
+          </>
+        )}
+
+        <div className="section-head">
+          <h2>HOD &amp; Dean decisions and remarks</h2>
+        </div>
+        {history(e).length === 0 ? (
+          <div className="empty-state">
+            <p>No review history yet.</p>
+          </div>
+        ) : (
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Reviewer</th>
+                  <th>Role</th>
+                  <th>Decision</th>
+                  <th>Version</th>
+                  <th>Remarks</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {history(e).map((h, i) => (
+                  <tr key={i}>
+                    <td>{h.reviewer_name || "—"}</td>
+                    <td>{ROLE_LABEL[h.reviewer_role] || h.reviewer_role}</td>
+                    <td>{decisionBadge(h.decision)}</td>
+                    <td>v{h.submission_version}</td>
+                    <td style={{ whiteSpace: "normal", minWidth: 220 }}>
+                      {h.remarks || "—"}
+                    </td>
+                    <td>
+                      {h.reviewed_at
+                        ? new Date(h.reviewed_at).toLocaleString()
+                        : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <div className="review-actions" style={{ marginTop: 20 }}>
+          <button
+            className="btn-primary"
+            onClick={() => openModal(e, "approved")}
+          >
+            ✓ Approve &amp; Publish
+          </button>{" "}
+          <button
+            className="btn-ghost"
+            onClick={() => openModal(e, "changes")}
+          >
+            ↩ Request Changes
+          </button>{" "}
+          <button
+            className="btn-danger"
+            onClick={() => openModal(e, "rejected")}
+          >
+            ✕ Reject
+          </button>
+        </div>
+
+        {renderModal()}
+      </Wrap>
+    );
+  }
+
+  // ---------------- list view ----------------
+  return (
+    <Wrap {...wrapProps}>
+      {embedded ? (
+        <div className="section-head">
+          <h2>📅 Event approvals (approved by HOD &amp; Dean)</h2>
+        </div>
+      ) : (
+        <div className="page-head">
+          <h1>Event Approvals</h1>
+          <p>
+            Events approved by the HOD and Dean, waiting for your final
+            approval.
+          </p>
+        </div>
+      )}
+
+      <div className="filter-bar">
+        <input
+          className="field"
+          placeholder="Search by event or organizer…"
+          value={search}
+          onChange={(ev) => setSearch(ev.target.value)}
+        />
+        <button className="btn-ghost" onClick={load}>
+          Refresh
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="empty-state">
+          <h3>Loading event approvals…</h3>
+        </div>
+      ) : error ? (
+        <div className="empty-state">
+          <h3>Unable to load approvals</h3>
+          <p>{error}</p>
+          <button className="btn-primary" onClick={load}>
+            Try again
+          </button>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="empty-state">
+          <h3>No events awaiting approval</h3>
+          <p>Events approved by the Dean will appear here.</p>
+        </div>
+      ) : (
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Event</th>
+                <th>Organizer</th>
+                <th>Date</th>
+                <th>Version</th>
+                <th>Dean remarks</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((e) => {
+                const deanEntry = [...history(e)]
+                  .reverse()
+                  .find((h) => h.reviewer_role === "dean");
+                return (
+                  <tr key={eventId(e)}>
+                    <td>
+                      <b>{e.title}</b>
+                    </td>
+                    <td>{e.organizer || "—"}</td>
+                    <td>{e.date || "—"}</td>
+                    <td>v{e.submission_version || 1}</td>
+                    <td
+                      style={{
+                        whiteSpace: "normal",
+                        maxWidth: 260,
+                      }}
+                    >
+                      {deanEntry?.remarks || "—"}
+                    </td>
+                    <td>
+                      <div className="row-actions">
+                        <button
+                          className="btn-ghost small"
+                          onClick={() => setSelected(e)}
+                        >
+                          Review
+                        </button>{" "}
+                        <button
+                          className="btn-primary small"
+                          onClick={() => openModal(e, "approved")}
+                        >
+                          Approve
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {reviewed.length > 0 && (
+        <>
+          <div className="section-head">
+            <h2>Reviewed by me ({reviewed.length})</h2>
+          </div>
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Event</th>
+                  <th>Organizer</th>
+                  <th>Current status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reviewed.map((e) => (
+                  <tr key={eventId(e)}>
+                    <td>{e.title}</td>
+                    <td>{e.organizer || "—"}</td>
+                    <td>
+                      <span
+                        className={`status-badge ${
+                          e.approval_status === "published"
+                            ? "status-published"
+                            : e.approval_status === "rejected"
+                            ? "status-cancelled"
+                            : "status-pending"
+                        }`}
+                      >
+                        {String(e.approval_status || "").replace(/_/g, " ")}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+
+      {embedded && <PublishedEventAudiences />}
+
+      {renderModal()}
+    </Wrap>
+  );
+
+  // ---------------- decision modal ----------------
+  function renderModal() {
+    if (!modal) return null;
+    const { event, decision } = modal;
+    const title =
+      decision === "approved"
+        ? event.is_modification
+          ? "Approve modification & publish changes"
+          : "Approve & publish event"
+        : decision === "changes"
+        ? "Request changes"
+        : "Reject event";
+
+    return (
+      <div className="modal-overlay" onClick={() => !busy && setModal(null)}>
+        <div
+          className={`modal-panel ${decision === "approved" ? "pap-modal-wide" : ""}`}
+          onClick={(ev) => ev.stopPropagation()}
+        >
+          <h2>{title}</h2>
+          <p className="modal-message">
+            {decision === "approved"
+              ? event.is_modification
+                ? "The approved changes will replace the current details of this event. Registered students are notified of important changes."
+                : `"${event.title}" will be published and visible to students.`
+              : `The club will be notified and can edit "${event.title}". After they edit it, it goes through HOD → Dean → Admin again.`}
+          </p>
+
+          {decision === "approved" && event.is_modification && (
+            <>
+              <p className="modal-message">
+                <b>Reason:</b> {event.modification?.reason || "—"}
+              </p>
+              <ModificationCompare rows={rowsFromQueueItem(event.modification)} />
+              <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <input
+                  type="checkbox"
+                  checked={shareReason}
+                  disabled={busy}
+                  onChange={(ev) => setShareReason(ev.target.checked)}
+                />
+                Share the organiser's reason with the notified students
+              </label>
+            </>
+          )}
+
+          {decision === "approved" && !event.is_modification && (
+            <>
+              <label>Publish Event To</label>
+              <PublishAudiencePicker
+                value={audience}
+                onChange={setAudience}
+                disabled={busy}
+              />
+            </>
+          )}
+
+          {decision !== "approved" && (
+            <>
+              <label htmlFor="remarks">Remarks (required)</label>
+              <textarea
+                id="remarks"
+                className="field"
+                rows={4}
+                maxLength={500}
+                value={remarks}
+                onChange={(ev) => setRemarks(ev.target.value)}
+              />
+            </>
+          )}
+
+          {modalError && (
+            <p className="modal-message" style={{ color: "var(--danger)" }}>
+              {modalError}
+            </p>
+          )}
+
+          <div className="modal-actions-right">
+            <button
+              className="btn-ghost"
+              disabled={busy}
+              onClick={() => setModal(null)}
+            >
+              Cancel
+            </button>
+            <button
+              className={decision === "approved" ? "btn-primary" : "btn-danger"}
+              disabled={busy}
+              onClick={submit}
+            >
+              {busy ? "Saving…" : "Confirm"}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+}

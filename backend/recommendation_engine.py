@@ -1297,6 +1297,32 @@ BASE_WEIGHTS: Dict[str, float] = {
 if not TIMETABLE_AFFECTS_SCORE:
     BASE_WEIGHTS.pop("timetable", None)
 
+# ------------------------------------------------------------
+# SEQUENTIAL SIGNAL (Phase F)
+# Used ONLY when the caller passes sequential scores that carry real
+# information (see prepare_sequential_scores). Otherwise the engine
+# behaves exactly as before, with BASE_WEIGHTS. When the signal is used,
+# the weights below apply (they are rescaled over the signals that are
+# available, like BASE_WEIGHTS). Lexical takes the semantic signal's place
+# and never counts together with it.
+# ------------------------------------------------------------
+SEQUENTIAL_WEIGHTS: Dict[str, float] = {
+    "content": 0.25,
+    "semantic": 0.25,
+    "lexical": 0.25,
+    "sequential": 0.20,
+    "feedback": 0.10,
+    "timetable": 0.05,
+    "availability": 0.10,
+    "context": 0.05,
+}
+if not TIMETABLE_AFFECTS_SCORE:
+    SEQUENTIAL_WEIGHTS.pop("timetable", None)
+
+SEQUENTIAL_NEUTRAL = 50.0        # stand-in for an event the model could not score
+SEQUENTIAL_MIN_SCORED = 3        # fewer scored events than this carry no information
+SEQUENTIAL_REASON_MIN = 60.0     # show "Fits your recent activity" from this score up
+
 SCHEDULE_SCORES: Dict[str, float] = {
     schedule.CONFLICT: 0.0,
     schedule.TIGHT: 60.0,
@@ -1426,12 +1452,17 @@ def collect_feedback_ids(
         "saved": _id_set(feedback, "saved_ids", "saved"),
         "registered": _id_set(feedback, "registered_ids", "registered"),
         "attended": _id_set(feedback, "attended_ids", "attended"),
+        # Events the student marked "not interested". They are removed from
+        # that student's recommendations (see ineligibility_reason). They are
+        # NOT positive feedback and never switch the feedback signal on.
+        "not_interested": _id_set(feedback, "not_interested_ids", "not_interested"),
     }
 
 
 def has_feedback_history(feedback: Optional[Dict[str, Any]]) -> bool:
     """A student with no saves/registrations/attendance has no feedback signal."""
-    return any(collect_feedback_ids(feedback).values())
+    ids = collect_feedback_ids(feedback)
+    return any(ids[kind] for kind in ("saved", "registered", "attended"))
 
 
 def has_profile_content(student: Dict[str, Any]) -> bool:
@@ -1523,6 +1554,46 @@ def is_event_full(event: Dict[str, Any]) -> bool:
     return False
 
 
+def prepare_sequential_scores(
+    scores: Any,
+    events: Sequence[Dict[str, Any]],
+) -> Dict[str, float]:
+    """
+    Clean the sequential scores handed in by the caller (event id -> 0-100).
+    Returns {} (signal not used) when there is nothing informative:
+    no scores, fewer than SEQUENTIAL_MIN_SCORED usable ones, or all equal.
+    Invalid values (None, NaN, infinity, text, booleans) are ignored; values
+    are clamped to 0-100; ids that are not among the candidates are dropped.
+    """
+    if not scores:
+        return {}
+    try:
+        items = list(scores.items())
+    except AttributeError:
+        return {}
+
+    wanted = {get_id(event) for event in events if isinstance(event, dict)}
+    clean: Dict[str, float] = {}
+    for key, value in items:
+        if isinstance(value, (bool, str)) or value is None:
+            continue
+        try:
+            number = float(value)
+        except (TypeError, ValueError):
+            continue
+        if not math.isfinite(number):
+            continue
+        if str(key) in wanted:
+            clean[str(key)] = clamp_score(number)
+
+    if len(clean) < SEQUENTIAL_MIN_SCORED:
+        return {}
+    values = list(clean.values())
+    if max(values) - min(values) <= 1e-9:
+        return {}
+    return clean
+
+
 def calculate_adaptive_hybrid_score(
     scores: Dict[str, float],
     available: Dict[str, bool]
@@ -1535,9 +1606,10 @@ def calculate_adaptive_hybrid_score(
     not drag every score down, and scores stay comparable between
     requests with and without (for example) the semantic model.
     """
+    table = SEQUENTIAL_WEIGHTS if available.get("sequential") else BASE_WEIGHTS
     used = {
         name: weight
-        for name, weight in BASE_WEIGHTS.items()
+        for name, weight in table.items()
         if available.get(name)
     }
 
@@ -1570,6 +1642,8 @@ def ineligibility_reason(
 
     if event_id and event_id in feedback_ids["registered"]:
         return "already_registered"
+    if event_id and event_id in feedback_ids.get("not_interested", ()):
+        return "not_interested"
 
     if schedule.is_event_expired(event, now):
         return "expired"
@@ -1601,9 +1675,16 @@ def score_event(
     schedule_context: Optional[
         Tuple[List[schedule.BusySlot], int]
     ] = None,
+    sequential_score: Optional[float] = None,
+    sequential_scored: bool = True,
 ) -> Dict[str, Any]:
     """
     Calculate every recommendation signal for one event.
+
+    sequential_score: None = the sequential signal is not used (the engine
+    behaves exactly as it always did). A number (0-100) = it is used with
+    SEQUENTIAL_WEIGHTS; sequential_scored=False marks a neutral stand-in for
+    an event the model could not score.
 
     The result lists which signals were really used (`signals_used`) and
     which were unavailable (`signals_unavailable`). Unavailable signals are
@@ -1640,6 +1721,9 @@ def score_event(
         ),
         "availability": availability_known,
     }
+    sequential_active = sequential_score is not None
+    if sequential_active:
+        available["sequential"] = True
 
     context_parts: List[Tuple[float, float]] = []
     if available["timetable"]:
@@ -1666,6 +1750,9 @@ def score_event(
             "timetable": timetable_value,
             "availability": availability_value,
             "context": context_value,
+            "sequential": (
+                clamp_score(sequential_score) if sequential_active else 0.0
+            ),
         },
         available,
     )
@@ -1679,12 +1766,34 @@ def score_event(
         context_value
     )
 
-    mlp_value = predict_mlp_score(mlp_model, features)
+    # The new learned ranker (trained_ranker.Ranker) is leakage-free: it never
+    # sees the feedback signal. Any other object keeps the legacy MLP path.
+    ranker_used = False
+    if mlp_model is not None and hasattr(mlp_model, "score_event_features"):
+        try:
+            mlp_value = mlp_model.score_event_features(
+                content=content,
+                semantic=semantic,
+                lexical=lexical,
+                semantic_available=available["semantic"],
+                lexical_available=available["lexical"],
+                availability=availability_value,
+                availability_known=availability_known,
+            )
+        except Exception:
+            mlp_value = None
+        ranker_used = mlp_value is not None
+    else:
+        mlp_value = predict_mlp_score(mlp_model, features)
 
-    # An MLP is used only when a trained model is passed in.
+    # A learned model is used only when one is passed in and can score this event.
     if mlp_value is not None:
         final_score = hybrid_value * 0.80 + mlp_value * 0.20
-        scoring_method = "Hybrid + MLP Neural Ranking"
+        scoring_method = (
+            "Hybrid + Learned Ranker"
+            if ranker_used
+            else "Hybrid + MLP Neural Ranking"
+        )
     else:
         final_score = hybrid_value
         scoring_method = "Hybrid Weighted Ranking"
@@ -1707,11 +1816,18 @@ def score_event(
     result["matchScore"] = round(final_score, 4)
     result["recommendation_score"] = round(final_score, 4)
 
-    result["signals_used"] = [
-        name for name in BASE_WEIGHTS if available.get(name)
+    weight_names = list(
+        SEQUENTIAL_WEIGHTS if sequential_active else BASE_WEIGHTS
+    )
+    used_names = [
+        name
+        for name in weight_names
+        if available.get(name)
+        and not (name == "sequential" and not sequential_scored)
     ]
+    result["signals_used"] = used_names
     result["signals_unavailable"] = [
-        name for name in BASE_WEIGHTS if not available.get(name)
+        name for name in weight_names if name not in used_names
     ]
     result["signal_weights"] = {
         name: round(weight, 4) for name, weight in weights_used.items()
@@ -1743,6 +1859,16 @@ def score_event(
             round(mlp_value, 4) if mlp_value is not None else None
         ),
     }
+
+    if sequential_active:
+        shown = (
+            round(clamp_score(sequential_score), 4)
+            if sequential_scored
+            else None
+        )
+        result["sequential_score"] = shown
+        result["sequential_scored"] = bool(sequential_scored)
+        result["breakdown"]["sequential"] = shown
 
     return result
 
@@ -1997,6 +2123,14 @@ def generate_reasons(
             "Mentions topics from your profile"
         )
 
+    if (
+        "sequential" in used
+        and safe_number(scores.get("sequential_score")) >= SEQUENTIAL_REASON_MIN
+    ):
+        reasons.append(
+            "Fits your recent activity"
+        )
+
     if "feedback" in used and feedback_value >= 40:
         reasons.append(
             "You saved this event"
@@ -2033,9 +2167,14 @@ def recommend_events(
     top_k: int = TOP_K_DEFAULT,
     mlp_model=None,
     now: Optional[datetime] = None,
+    sequential_scores: Optional[Dict[str, Any]] = None,
 ) -> List[Dict[str, Any]]:
     """
     Main recommendation pipeline.
+
+    sequential_scores (optional): {event id: 0-100} from the sequential model,
+    already normalised per request. Used only when it carries information
+    (see prepare_sequential_scores); otherwise the pipeline is unchanged.
 
     Pipeline:
 
@@ -2130,8 +2269,10 @@ def recommend_events(
 
     scored_events = []
 
-    for event in vector_events:
+    sequential = prepare_sequential_scores(sequential_scores, vector_events)
 
+    for event in vector_events:
+        sequential_value = sequential.get(get_id(event)) if sequential else None
         scored = score_event(
             student=student,
             event=event,
@@ -2139,6 +2280,16 @@ def recommend_events(
             timetable=timetable,
             mlp_model=mlp_model,
             schedule_context=schedule_context,
+            sequential_score=(
+                None
+                if not sequential
+                else (
+                    sequential_value
+                    if sequential_value is not None
+                    else SEQUENTIAL_NEUTRAL
+                )
+            ),
+            sequential_scored=sequential_value is not None,
         )
 
         scored[
@@ -2225,6 +2376,11 @@ def create_training_example(
     label: Optional[float] = None,
 ) -> Dict[str, Any]:
     """
+    DEPRECATED (kept for compatibility): when no label is given, the label is
+    derived from the feedback score, which is ALSO one of the input features.
+    The model can then simply read the answer from its input (label leakage).
+    Use train_ranker.py / trained_ranker.py instead: real labels, no feedback input.
+
     Create one training sample for the MLP.
 
     Label can represent:
@@ -2646,6 +2802,7 @@ def get_recommendations(
     top_k: int = TOP_K_DEFAULT,
     mlp_model=None,
     now: Optional[datetime] = None,
+    sequential_scores: Optional[Dict[str, Any]] = None,
 ) -> List[Dict[str, Any]]:
     """
     Simple public API for the recommendation engine.
@@ -2659,6 +2816,7 @@ def get_recommendations(
         top_k=top_k,
         mlp_model=mlp_model,
         now=now,
+        sequential_scores=sequential_scores,
     )
 
 

@@ -351,11 +351,11 @@ export default function AdminNotifications() {
   // ============================================================
 
   return (
-    <div
+    <div className="admin-page"
       style={{
         minHeight: "100vh",
-        background: "#080d1c",
-        color: "#ffffff",
+        background: "var(--ap-page)",
+        color: "var(--ap-text)",
       }}
     >
       {/* ======================================================
@@ -390,7 +390,7 @@ export default function AdminNotifications() {
           bottom: 0,
           left: collapsed ? "80px" : "200px",
           overflowY: "auto",
-          background: "#080d1c",
+          background: "var(--ap-page)",
           padding: "32px",
           boxSizing: "border-box",
         }}
@@ -410,7 +410,7 @@ export default function AdminNotifications() {
               style={{
                 margin: 0,
                 fontSize: "32px",
-                color: "#ffffff",
+                color: "var(--ap-text)",
               }}
             >
               Notifications
@@ -419,7 +419,7 @@ export default function AdminNotifications() {
             <p
               style={{
                 margin: "8px 0 0",
-                color: "#94a3b8",
+                color: "var(--ap-muted)",
               }}
             >
               Stay updated with applications,
@@ -433,9 +433,9 @@ export default function AdminNotifications() {
             style={{
               padding: "10px 18px",
               borderRadius: "8px",
-              border: "1px solid #334155",
-              background: "#111827",
-              color: "#ffffff",
+              border: "1px solid var(--ap-border)",
+              background: "var(--ap-card)",
+              color: "var(--ap-text)",
               cursor: "pointer",
             }}
           >
@@ -479,8 +479,8 @@ export default function AdminNotifications() {
 
         <div
           style={{
-            background: "#111827",
-            border: "1px solid #26344d",
+            background: "var(--ap-card)",
+            border: "1px solid var(--ap-border)",
             borderRadius: "10px",
             padding: "14px",
             marginBottom: "18px",
@@ -547,7 +547,7 @@ export default function AdminNotifications() {
               border: "none",
               background:
                 unreadCount === 0
-                  ? "#374151"
+                  ? "var(--ap-border)"
                   : "#2563eb",
               color: "#ffffff",
               cursor:
@@ -566,8 +566,8 @@ export default function AdminNotifications() {
 
         <div
           style={{
-            background: "#111827",
-            border: "1px solid #26344d",
+            background: "var(--ap-card)",
+            border: "1px solid var(--ap-border)",
             borderRadius: "12px",
             overflow: "hidden",
             minHeight: "250px",
@@ -590,7 +590,7 @@ export default function AdminNotifications() {
 
               <p
                 style={{
-                  color: "#94a3b8",
+                  color: "var(--ap-muted)",
                 }}
               >
                 Please wait.
@@ -613,7 +613,7 @@ export default function AdminNotifications() {
 
               <h3
                 style={{
-                  color: "#f87171",
+                  color: "var(--ap-bad-fg)",
                 }}
               >
                 Unable to load notifications
@@ -621,7 +621,7 @@ export default function AdminNotifications() {
 
               <p
                 style={{
-                  color: "#94a3b8",
+                  color: "var(--ap-muted)",
                 }}
               >
                 {error}
@@ -664,7 +664,7 @@ export default function AdminNotifications() {
 
                 <h3
                   style={{
-                    color: "#ffffff",
+                    color: "var(--ap-text)",
                   }}
                 >
                   No notifications
@@ -672,7 +672,7 @@ export default function AdminNotifications() {
 
                 <p
                   style={{
-                    color: "#94a3b8",
+                    color: "var(--ap-muted)",
                   }}
                 >
                   There are no notifications
@@ -695,11 +695,11 @@ export default function AdminNotifications() {
                         display: "flex",
                         alignItems: "center",
                         borderBottom:
-                          "1px solid #26344d",
+                          "1px solid var(--ap-border)",
                         background:
                           notification.is_read
-                            ? "#111827"
-                            : "#172033",
+                            ? "var(--ap-card)"
+                            : "var(--ap-card)",
                       }}
                     >
                       {/* NOTIFICATION */}
@@ -720,7 +720,7 @@ export default function AdminNotifications() {
                           border: "none",
                           background:
                             "transparent",
-                          color: "#ffffff",
+                          color: "var(--ap-text)",
                           textAlign: "left",
                           cursor: "pointer",
                         }}
@@ -731,7 +731,7 @@ export default function AdminNotifications() {
                             height: "44px",
                             minWidth: "44px",
                             borderRadius: "10px",
-                            background: "#263b67",
+                            background: "var(--ap-card2)",
                             display: "flex",
                             alignItems:
                               "center",
@@ -761,7 +761,7 @@ export default function AdminNotifications() {
                           >
                             <strong
                               style={{
-                                color: "#ffffff",
+                                color: "var(--ap-text)",
                               }}
                             >
                               {notification.title ||
@@ -792,7 +792,7 @@ export default function AdminNotifications() {
 
                           <div
                             style={{
-                              color: "#cbd5e1",
+                              color: "var(--ap-text)",
                               marginBottom: "7px",
                             }}
                           >
@@ -802,7 +802,7 @@ export default function AdminNotifications() {
 
                           <div
                             style={{
-                              color: "#64748b",
+                              color: "var(--ap-faint)",
                               fontSize: "12px",
                             }}
                           >
@@ -833,13 +833,13 @@ export default function AdminNotifications() {
                               width: "35px",
                               height: "35px",
                               border:
-                                "1px solid #334155",
+                                "1px solid var(--ap-border)",
                               borderRadius:
                                 "7px",
                               background:
-                                "#1e293b",
+                                "var(--ap-card2)",
                               color:
-                                "#ffffff",
+                                "var(--ap-text)",
                               cursor:
                                 "pointer",
                             }}
@@ -859,13 +859,13 @@ export default function AdminNotifications() {
                             width: "35px",
                             height: "35px",
                             border:
-                              "1px solid #334155",
+                              "1px solid var(--ap-border)",
                             borderRadius:
                               "7px",
                             background:
-                              "#1e293b",
+                              "var(--ap-card2)",
                             color:
-                              "#ffffff",
+                              "var(--ap-text)",
                             cursor:
                               "pointer",
                           }}
@@ -893,15 +893,15 @@ function SummaryCard({ title, value }) {
   return (
     <div
       style={{
-        background: "#111827",
-        border: "1px solid #26344d",
+        background: "var(--ap-card)",
+        border: "1px solid var(--ap-border)",
         borderRadius: "10px",
         padding: "20px",
       }}
     >
       <div
         style={{
-          color: "#94a3b8",
+          color: "var(--ap-muted)",
           fontSize: "13px",
           marginBottom: "8px",
         }}
@@ -911,7 +911,7 @@ function SummaryCard({ title, value }) {
 
       <div
         style={{
-          color: "#ffffff",
+          color: "var(--ap-text)",
           fontSize: "28px",
           fontWeight: "700",
         }}
@@ -939,10 +939,10 @@ function FilterButton({
         borderRadius: "7px",
         border: active
           ? "1px solid #6366f1"
-          : "1px solid #334155",
+          : "1px solid var(--ap-border)",
         background: active
-          ? "#312e81"
-          : "#111827",
+          ? "var(--ap-acc-bg)"
+          : "var(--ap-card)",
         color: "#ffffff",
         cursor: "pointer",
         fontWeight: "600",

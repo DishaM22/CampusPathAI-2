@@ -1,0 +1,16 @@
+/* Scoped to Academic Progression Management only. */
+.acp-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+.acp-tab { padding: 6px 14px; border: 1px solid var(--border); border-radius: 99px; background: var(--surface-2); color: var(--text-dim); cursor: pointer; font-size: 13px; }
+.acp-tab.is-active { border-color: var(--primary); color: var(--text); box-shadow: 0 0 0 3px var(--primary-soft); }
+.acp-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 760px) { .acp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.acp-card { border: 1px solid var(--border); border-radius: var(--radius-s, 8px); padding: 12px; background: var(--surface-2); margin: 10px 0; display: flex; flex-direction: column; gap: 10px; }
+.acp-card h3 { margin: 0; font-size: 14px; color: var(--text); }
+.acp-summary { font-size: 14px; color: var(--text); padding: 10px 12px; border-radius: var(--radius-s, 8px); background: var(--primary-soft); }
+.acp-scroll { max-height: 360px; overflow: auto; }
+.acp-note { font-size: 12.5px; color: var(--text-dim); margin: 0; }
+.acp-error { font-size: 12.5px; color: var(--danger); margin: 0; }
+.acp-list { margin: 6px 0 0; padding-left: 18px; font-size: 12.5px; color: var(--text-dim); max-height: 160px; overflow: auto; }
+.acp-modal-wide { max-width: 680px; width: 94vw; max-height: 90vh; overflow-y: auto; }
+.acp-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.acp-textarea { width: 100%; min-height: 70px; resize: vertical; }

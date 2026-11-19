@@ -1,8 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../admin/components/Sidebar";
+import { bulkUpdateUserStatus, bulkDeleteUsers } from "../adminService";
 
 const API_BASE = "http://127.0.0.1:8000";
+
+// Admin accounts are never changed from this page, so they get no checkbox.
+const isSelectable = (user) =>
+  !!user.id && String(user.role).toLowerCase() !== "admin";
 
 export default function AdminUsers() {
   const navigate = useNavigate();
@@ -16,6 +21,13 @@ export default function AdminUsers() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   const [selectedUser, setSelectedUser] = useState(null);
+
+  // bulk actions (checkboxes)
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [bulkDialog, setBulkDialog] = useState(null); // "activate" | "disable" | "delete"
+  const [deleteText, setDeleteText] = useState("");
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkNotice, setBulkNotice] = useState(null); // { type, message, skipped }
 
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -184,6 +196,127 @@ export default function AdminUsers() {
     statusFilter,
   ]);
 
+  // A selection only makes sense for the rows being shown, so changing the
+  // search or a filter clears it (nothing hidden can be acted on by mistake).
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [search, roleFilter, statusFilter]);
+
+  const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+
+  const selectableShown = useMemo(
+    () => filteredUsers.filter(isSelectable),
+    [filteredUsers]
+  );
+
+  const allShownSelected =
+    selectableShown.length > 0 &&
+    selectableShown.every((user) => selectedSet.has(user.id));
+
+  const someShownSelected = selectableShown.some((user) =>
+    selectedSet.has(user.id)
+  );
+
+  // What the selected users are, so only the actions that still apply to
+  // them are offered (no "Disable" for people who are already disabled).
+  const selection = useMemo(() => {
+    const picked = normalizedUsers.filter((user) => selectedSet.has(user.id));
+    const statusOf = (user) => String(user.status).toLowerCase();
+
+    return {
+      students: picked.filter(
+        (user) => String(user.role).toLowerCase() === "student"
+      ),
+      disableIds: picked
+        .filter((user) => statusOf(user) !== "disabled")
+        .map((user) => user.id),
+      activateIds: picked
+        .filter((user) => ["disabled", "inactive"].includes(statusOf(user)))
+        .map((user) => user.id),
+    };
+  }, [normalizedUsers, selectedSet]);
+
+  const selectedStudentCount = selection.students.length;
+
+  // How many of the selected users the open dialog's action will really change.
+  const dialogCount =
+    bulkDialog === "disable"
+      ? selection.disableIds.length
+      : bulkDialog === "activate"
+      ? selection.activateIds.length
+      : selectedStudentCount;
+
+  const toggleUser = (id) => {
+    setSelectedIds((current) =>
+      current.includes(id)
+        ? current.filter((value) => value !== id)
+        : [...current, id]
+    );
+  };
+
+  const toggleAllShown = () => {
+    setSelectedIds(
+      allShownSelected ? [] : selectableShown.map((user) => user.id)
+    );
+  };
+
+  const openBulkDialog = (action) => {
+    setDeleteText("");
+    setBulkNotice(null);
+    setBulkDialog(action);
+  };
+
+  const closeBulkDialog = () => {
+    if (!bulkBusy) {
+      setBulkDialog(null);
+      setDeleteText("");
+    }
+  };
+
+  const runBulkAction = async () => {
+    const ids =
+      bulkDialog === "delete"
+        ? selectedIds
+        : bulkDialog === "disable"
+        ? selection.disableIds
+        : selection.activateIds;
+
+    if (!bulkDialog || ids.length === 0) {
+      return;
+    }
+
+    setBulkBusy(true);
+
+    try {
+      const result =
+        bulkDialog === "delete"
+          ? await bulkDeleteUsers(ids)
+          : await bulkUpdateUserStatus(ids, bulkDialog);
+
+      setBulkNotice({
+        type: "success",
+        message: result?.message || "Done.",
+        skipped: Array.isArray(result?.skipped) ? result.skipped : [],
+      });
+
+      setSelectedIds([]);
+      setBulkDialog(null);
+      setDeleteText("");
+
+      await fetchUsers();
+    } catch (err) {
+      setBulkNotice({
+        type: "error",
+        message: err.message || "The action could not be completed.",
+        skipped: [],
+      });
+
+      setBulkDialog(null);
+    } finally {
+      setBulkBusy(false);
+    }
+  };
+
   const getInitials = (name) => {
     if (!name) return "?";
 
@@ -201,6 +334,10 @@ export default function AdminUsers() {
 
     if (role === "intercollege") {
       return "Intercollege";
+    }
+
+    if (role === "hod") {
+      return "HOD";
     }
 
     return (
@@ -247,6 +384,9 @@ export default function AdminUsers() {
 
       case "inactive":
         return "status-inactive";
+
+      case "disabled":
+        return "status-disabled";
 
       default:
         return "status-default";
@@ -587,6 +727,179 @@ export default function AdminUsers() {
           color: #94a3b8;
         }
 
+        .status-disabled {
+          background: #3b1d1d;
+          color: #fca5a5;
+        }
+
+        .check-col {
+          width: 44px;
+          padding-right: 0 !important;
+        }
+
+        .row-check {
+          width: 17px;
+          height: 17px;
+          accent-color: #7c5cff;
+          cursor: pointer;
+        }
+
+        .row-check:disabled {
+          cursor: not-allowed;
+          opacity: 0.35;
+        }
+
+        .users-table tbody tr.row-selected {
+          background: #1a1f3d;
+        }
+
+        .bulk-bar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          flex-wrap: wrap;
+          margin: 14px 18px 0;
+          padding: 10px 14px;
+          border: 1px solid #3b3f8f;
+          background: #181c3a;
+          border-radius: 10px;
+        }
+
+        .bulk-count {
+          font-weight: 700;
+          color: #c7d2fe;
+        }
+
+        .bulk-actions,
+        .bulk-dialog-actions {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+
+        .bulk-dialog-actions {
+          justify-content: flex-end;
+          margin-top: 22px;
+        }
+
+        .bulk-btn {
+          border: 1px solid #334155;
+          background: transparent;
+          color: #e2e8f0;
+          padding: 8px 14px;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 13px;
+          font-weight: 600;
+        }
+
+        .bulk-btn:disabled {
+          opacity: 0.45;
+          cursor: not-allowed;
+        }
+
+        .bulk-activate {
+          border-color: #166534;
+          color: #4ade80;
+        }
+
+        .bulk-activate:hover:not(:disabled) {
+          background: #052e1b;
+        }
+
+        .bulk-disable {
+          border-color: #92400e;
+          color: #fbbf24;
+        }
+
+        .bulk-disable:hover:not(:disabled) {
+          background: #422006;
+        }
+
+        .bulk-delete {
+          border-color: #991b1b;
+          color: #f87171;
+        }
+
+        .bulk-delete:hover:not(:disabled) {
+          background: #450a0a;
+        }
+
+        .bulk-delete-solid {
+          background: #b91c1c;
+          border-color: #b91c1c;
+          color: #fff;
+        }
+
+        .bulk-clear:hover:not(:disabled) {
+          background: #1e293b;
+        }
+
+        .bulk-notice {
+          margin: 14px 18px 0;
+          padding: 12px 14px;
+          border-radius: 10px;
+          font-size: 14px;
+        }
+
+        .bulk-notice.success {
+          border: 1px solid #166534;
+          background: #052e1b;
+          color: #86efac;
+        }
+
+        .bulk-notice.error {
+          border: 1px solid #7f1d1d;
+          background: #2a1111;
+          color: #fca5a5;
+        }
+
+        .bulk-notice-main {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .bulk-skipped {
+          margin: 10px 0 0;
+          padding-left: 18px;
+          color: #cbd5e1;
+          font-size: 13px;
+        }
+
+        .bulk-skipped li {
+          margin-bottom: 3px;
+        }
+
+        .bulk-modal {
+          max-width: 520px;
+        }
+
+        .bulk-text {
+          margin: 0 0 12px;
+          color: #cbd5e1;
+          font-size: 14px;
+          line-height: 1.55;
+        }
+
+        .bulk-danger {
+          color: #fca5a5;
+        }
+
+        .bulk-label {
+          display: block;
+          margin: 14px 0 6px;
+          color: #94a3b8;
+          font-size: 13px;
+        }
+
+        .bulk-input {
+          width: 100%;
+          flex: none;
+        }
+
         .modal-overlay {
           position: fixed;
           inset: 0;
@@ -729,6 +1042,153 @@ export default function AdminUsers() {
             grid-template-columns: 1fr;
           }
         }
+        
+
+/* =====================================
+   ADMIN USERS - LIGHT MODE
+===================================== */
+
+:root[data-admin-theme="light"] .admin-users-page {
+  background: #f3f6fc !important;
+  color: #17243b !important;
+}
+
+:root[data-admin-theme="light"] .users-header-left h1,
+:root[data-admin-theme="light"] .user-stat-value,
+:root[data-admin-theme="light"] .user-name,
+:root[data-admin-theme="light"] .users-empty-title,
+:root[data-admin-theme="light"] .user-modal-title,
+:root[data-admin-theme="light"] .modal-user-name {
+  color: #17243b !important;
+}
+
+:root[data-admin-theme="light"] .users-header-left p,
+:root[data-admin-theme="light"] .user-stat-label,
+:root[data-admin-theme="light"] .users-empty,
+:root[data-admin-theme="light"] .users-loading,
+:root[data-admin-theme="light"] .user-modal-subtitle,
+:root[data-admin-theme="light"] .modal-user-email,
+:root[data-admin-theme="light"] .bulk-label {
+  color: #64748b !important;
+}
+
+/* Cards and main panel */
+:root[data-admin-theme="light"] .user-stat-card,
+:root[data-admin-theme="light"] .users-panel,
+:root[data-admin-theme="light"] .user-modal {
+  background: #ffffff !important;
+  border-color: #dce3ef !important;
+}
+
+/* Search and dropdowns */
+:root[data-admin-theme="light"] .users-search,
+:root[data-admin-theme="light"] .users-select,
+:root[data-admin-theme="light"] .detail-box {
+  background: #f8fafc !important;
+  color: #17243b !important;
+  border-color: #dce3ef !important;
+}
+
+:root[data-admin-theme="light"] .users-search::placeholder {
+  color: #94a3b8 !important;
+}
+
+:root[data-admin-theme="light"] .users-select option {
+  background: #ffffff;
+  color: #17243b;
+}
+
+/* Table */
+:root[data-admin-theme="light"] .users-table th {
+  color: #64748b !important;
+  border-bottom-color: #dce3ef !important;
+}
+
+:root[data-admin-theme="light"] .users-table td {
+  color: #465670 !important;
+  border-bottom-color: #e5eaf2 !important;
+}
+
+:root[data-admin-theme="light"] .users-table tbody tr:hover {
+  background: #f1f5fb !important;
+}
+
+:root[data-admin-theme="light"] .users-table tbody tr.row-selected {
+  background: #e8eaff !important;
+}
+
+:root[data-admin-theme="light"] .user-email,
+:root[data-admin-theme="light"] .detail-label {
+  color: #687991 !important;
+}
+
+/* Buttons */
+:root[data-admin-theme="light"] .refresh-button,
+:root[data-admin-theme="light"] .view-user-button,
+:root[data-admin-theme="light"] .bulk-btn {
+  background: #ffffff !important;
+  color: #465670 !important;
+  border-color: #dce3ef !important;
+}
+
+:root[data-admin-theme="light"] .refresh-button:hover,
+:root[data-admin-theme="light"] .bulk-clear:hover:not(:disabled) {
+  background: #edf1f8 !important;
+}
+
+:root[data-admin-theme="light"] .view-user-button {
+  color: #635bdb !important;
+}
+
+:root[data-admin-theme="light"] .view-user-button:hover {
+  background: #eeedff !important;
+}
+
+/* Modal */
+:root[data-admin-theme="light"] .user-modal-header {
+  border-bottom-color: #dce3ef !important;
+}
+
+:root[data-admin-theme="light"] .detail-value,
+:root[data-admin-theme="light"] .bulk-text {
+  color: #465670 !important;
+}
+
+:root[data-admin-theme="light"] .modal-close {
+  color: #64748b !important;
+}
+
+:root[data-admin-theme="light"] .modal-close:hover {
+  color: #17243b !important;
+}
+
+/* Bulk action panel */
+:root[data-admin-theme="light"] .bulk-bar {
+  background: #eeefff !important;
+  border-color: #c7c9f5 !important;
+}
+
+:root[data-admin-theme="light"] .bulk-count {
+  color: #4338a8 !important;
+}
+
+:root[data-admin-theme="light"] .bulk-text,
+:root[data-admin-theme="light"] .bulk-skipped {
+  color: #465670 !important;
+}
+
+/* Keep modal overlay readable */
+:root[data-admin-theme="light"] .modal-overlay {
+  background: rgba(15, 23, 42, 0.40) !important;
+}
+
+/* User avatar */
+:root[data-admin-theme="light"] .user-avatar,
+:root[data-admin-theme="light"] .modal-avatar {
+  background: #eeedff !important;
+  color: #635bdb !important;
+}
+
       `}</style>
 
       <div className="admin-users-container">
@@ -850,6 +1310,18 @@ export default function AdminUsers() {
                 Intercollege
               </option>
 
+              <option value="faculty">
+                Faculty
+              </option>
+
+              <option value="hod">
+                HODs
+              </option>
+
+              <option value="dean">
+                Deans
+              </option>
+
               <option value="admin">
                 Admins
               </option>
@@ -881,9 +1353,103 @@ export default function AdminUsers() {
               <option value="inactive">
                 Inactive
               </option>
+
+              <option value="disabled">
+                Disabled
+              </option>
             </select>
 
           </div>
+
+          {/* RESULT OF THE LAST BULK ACTION */}
+          {bulkNotice && (
+            <div className={`bulk-notice ${bulkNotice.type}`}>
+              <div className="bulk-notice-main">
+                <span>{bulkNotice.message}</span>
+
+                <button
+                  type="button"
+                  className="modal-close"
+                  aria-label="Dismiss"
+                  onClick={() => setBulkNotice(null)}
+                >
+                  ×
+                </button>
+              </div>
+
+              {bulkNotice.skipped.length > 0 && (
+                <ul className="bulk-skipped">
+                  {bulkNotice.skipped.slice(0, 10).map((item) => (
+                    <li key={item.id}>
+                      <strong>
+                        {item.name || item.email || item.id}
+                      </strong>
+                      : {item.reason}
+                    </li>
+                  ))}
+
+                  {bulkNotice.skipped.length > 10 && (
+                    <li>
+                      …and {bulkNotice.skipped.length - 10} more
+                    </li>
+                  )}
+                </ul>
+              )}
+            </div>
+          )}
+
+          {/* SELECTION BAR */}
+          {selectedIds.length > 0 && (
+            <div className="bulk-bar">
+              <span className="bulk-count">
+                {selectedIds.length} selected
+              </span>
+
+              <div className="bulk-actions">
+                {selection.activateIds.length > 0 && (
+                  <button
+                    type="button"
+                    className="bulk-btn bulk-activate"
+                    onClick={() => openBulkDialog("activate")}
+                  >
+                    Activate
+                  </button>
+                )}
+
+                {selection.disableIds.length > 0 && (
+                  <button
+                    type="button"
+                    className="bulk-btn bulk-disable"
+                    onClick={() => openBulkDialog("disable")}
+                  >
+                    Disable
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  className="bulk-btn bulk-delete"
+                  disabled={selectedStudentCount === 0}
+                  title={
+                    selectedStudentCount === 0
+                      ? "Only student accounts can be deleted. You can disable other accounts."
+                      : "Permanently delete the selected students"
+                  }
+                  onClick={() => openBulkDialog("delete")}
+                >
+                  Delete
+                </button>
+
+                <button
+                  type="button"
+                  className="bulk-btn bulk-clear"
+                  onClick={() => setSelectedIds([])}
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* ERROR */}
           {error && (
@@ -925,6 +1491,22 @@ export default function AdminUsers() {
 
                 <thead>
                   <tr>
+                    <th className="check-col">
+                      <input
+                        type="checkbox"
+                        className="row-check"
+                        aria-label="Select all users shown"
+                        checked={allShownSelected}
+                        disabled={selectableShown.length === 0}
+                        ref={(element) => {
+                          if (element) {
+                            element.indeterminate =
+                              someShownSelected && !allShownSelected;
+                          }
+                        }}
+                        onChange={toggleAllShown}
+                      />
+                    </th>
                     <th>User</th>
                     <th>Role</th>
                     <th>Department</th>
@@ -938,7 +1520,26 @@ export default function AdminUsers() {
 
                   {filteredUsers.map((user) => (
 
-                    <tr key={user.id || user.email}>
+                    <tr
+                      key={user.id || user.email}
+                      className={selectedSet.has(user.id) ? "row-selected" : ""}
+                    >
+
+                      <td className="check-col">
+                        <input
+                          type="checkbox"
+                          className="row-check"
+                          aria-label={`Select ${user.name}`}
+                          checked={selectedSet.has(user.id)}
+                          disabled={!isSelectable(user)}
+                          title={
+                            isSelectable(user)
+                              ? undefined
+                              : "Admin accounts cannot be changed here"
+                          }
+                          onChange={() => toggleUser(user.id)}
+                        />
+                      </td>
 
                       <td>
 
@@ -1017,6 +1618,147 @@ export default function AdminUsers() {
 
         </div>
       </div>
+
+      {/* BULK ACTION CONFIRMATION */}
+      {bulkDialog && (
+        <div
+          className="modal-overlay"
+          onClick={closeBulkDialog}
+        >
+          <div
+            className="user-modal bulk-modal"
+            role="dialog"
+            aria-modal="true"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="user-modal-header">
+              <div>
+                <h2 className="user-modal-title">
+                  {bulkDialog === "activate" &&
+                    `Activate ${dialogCount} account${dialogCount === 1 ? "" : "s"}?`}
+                  {bulkDialog === "disable" &&
+                    `Disable ${dialogCount} account${dialogCount === 1 ? "" : "s"}?`}
+                  {bulkDialog === "delete" &&
+                    `Permanently delete ${selectedStudentCount} student account${selectedStudentCount === 1 ? "" : "s"}?`}
+                </h2>
+              </div>
+
+              <button
+                type="button"
+                className="modal-close"
+                aria-label="Close"
+                onClick={closeBulkDialog}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="user-modal-body">
+              {bulkDialog === "activate" && (
+                <>
+                  <p className="bulk-text">
+                    These disabled accounts can sign in again and get back
+                    the status they had before. Pending or rejected
+                    organisation applications are handled on the
+                    Applications page.
+                  </p>
+
+                  {selectedIds.length > dialogCount && (
+                    <p className="bulk-text">
+                      {selectedIds.length - dialogCount} other selected
+                      account(s) are not disabled and are left unchanged.
+                    </p>
+                  )}
+                </>
+              )}
+
+              {bulkDialog === "disable" && (
+                <>
+                  <p className="bulk-text">
+                    These users are signed out immediately and cannot sign
+                    in until you activate them again. Their data is kept.
+                    Admin accounts and your own account are never changed.
+                  </p>
+
+                  {selectedIds.length > dialogCount && (
+                    <p className="bulk-text">
+                      {selectedIds.length - dialogCount} other selected
+                      account(s) are already disabled and are left
+                      unchanged.
+                    </p>
+                  )}
+                </>
+              )}
+
+              {bulkDialog === "delete" && (
+                <>
+                  <p className="bulk-text bulk-danger">
+                    This cannot be undone. Each account is removed together
+                    with the student's registrations, attendance, saved
+                    events and notifications.
+                  </p>
+
+                  {selectedIds.length > selectedStudentCount && (
+                    <p className="bulk-text">
+                      {selectedIds.length - selectedStudentCount} selected
+                      account(s) are not students and will be skipped. You
+                      can disable those instead.
+                    </p>
+                  )}
+
+                  <label className="bulk-label" htmlFor="bulk-delete-text">
+                    Type <strong>DELETE</strong> to confirm
+                  </label>
+
+                  <input
+                    id="bulk-delete-text"
+                    className="users-search bulk-input"
+                    value={deleteText}
+                    onChange={(event) => setDeleteText(event.target.value)}
+                    autoComplete="off"
+                    autoFocus
+                  />
+                </>
+              )}
+
+              <div className="bulk-dialog-actions">
+                <button
+                  type="button"
+                  className="bulk-btn bulk-clear"
+                  onClick={closeBulkDialog}
+                  disabled={bulkBusy}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  className={`bulk-btn ${
+                    bulkDialog === "delete"
+                      ? "bulk-delete-solid"
+                      : bulkDialog === "disable"
+                      ? "bulk-disable"
+                      : "bulk-activate"
+                  }`}
+                  disabled={
+                    bulkBusy ||
+                    (bulkDialog === "delete" && deleteText !== "DELETE")
+                  }
+                  onClick={runBulkAction}
+                >
+                  {bulkBusy
+                    ? "Working…"
+                    : bulkDialog === "delete"
+                    ? "Delete permanently"
+                    : bulkDialog === "disable"
+                    ? "Disable"
+                    : "Activate"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* USER DETAILS MODAL */}
       {selectedUser && (

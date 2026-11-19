@@ -121,12 +121,12 @@ export default function AdminRegistrations() {
   // =========================================================
 
   return (
-    <div
+    <div className="admin-page"
       style={{
         minHeight: "100vh",
         width: "100%",
-        background: "#0b1220",
-        color: "#ffffff",
+        background: "var(--ap-page)",
+        color: "var(--ap-text)",
         display: "flex",
         fontFamily:
           "Inter, Arial, Helvetica, sans-serif",
@@ -141,8 +141,8 @@ export default function AdminRegistrations() {
           width: "208px",
           minWidth: "208px",
           minHeight: "100vh",
-          background: "#111827",
-          borderRight: "1px solid #263247",
+          background: "var(--ap-card)",
+          borderRight: "1px solid var(--ap-border)",
           boxSizing: "border-box",
           padding: "28px 10px",
         }}
@@ -159,7 +159,7 @@ export default function AdminRegistrations() {
             style={{
               fontSize: "16px",
               fontWeight: 700,
-              color: "#ffffff",
+              color: "var(--ap-text)",
             }}
           >
             CampusPath AI
@@ -170,7 +170,7 @@ export default function AdminRegistrations() {
               marginTop: "2px",
               fontSize: "12px",
               fontWeight: 700,
-              color: "#ffffff",
+              color: "var(--ap-text)",
             }}
           >
             ADMIN
@@ -258,7 +258,7 @@ export default function AdminRegistrations() {
           style={{
             marginTop: "40px",
             borderTop:
-              "1px solid #263247",
+              "1px solid var(--ap-border)",
             paddingTop: "18px",
           }}
         >
@@ -268,7 +268,7 @@ export default function AdminRegistrations() {
               width: "100%",
               border: "none",
               background: "transparent",
-              color: "#cbd5e1",
+              color: "var(--ap-text)",
               padding: "11px 12px",
               textAlign: "left",
               cursor: "pointer",
@@ -291,7 +291,7 @@ export default function AdminRegistrations() {
           minHeight: "100vh",
           padding: "32px",
           boxSizing: "border-box",
-          background: "#0b1220",
+          background: "var(--ap-card2)",
         }}
       >
         {/* HEADER */}
@@ -310,7 +310,7 @@ export default function AdminRegistrations() {
                 margin: 0,
                 fontSize: "28px",
                 fontWeight: 700,
-                color: "#ffffff",
+                color: "var(--ap-text)",
               }}
             >
               Registrations
@@ -320,7 +320,7 @@ export default function AdminRegistrations() {
               style={{
                 margin:
                   "7px 0 0",
-                color: "#94a3b8",
+                color: "var(--ap-muted)",
                 fontSize: "14px",
               }}
             >
@@ -336,10 +336,10 @@ export default function AdminRegistrations() {
                 "10px 16px",
               borderRadius: "8px",
               border:
-                "1px solid #334155",
+                "1px solid var(--ap-border)",
               background:
-                "#111827",
-              color: "#ffffff",
+                "var(--ap-card)",
+              color: "var(--ap-text)",
               cursor: "pointer",
               fontSize: "13px",
             }}
@@ -388,9 +388,9 @@ export default function AdminRegistrations() {
 
         <div
           style={{
-            background: "#111827",
+            background: "var(--ap-card)",
             border:
-              "1px solid #263247",
+              "1px solid var(--ap-border)",
             borderRadius: "12px",
             overflow: "hidden",
           }}
@@ -401,7 +401,7 @@ export default function AdminRegistrations() {
             style={{
               padding: "16px",
               borderBottom:
-                "1px solid #263247",
+                "1px solid var(--ap-border)",
             }}
           >
             <input
@@ -417,11 +417,11 @@ export default function AdminRegistrations() {
                 borderRadius:
                   "8px",
                 border:
-                  "1px solid #334155",
+                  "1px solid var(--ap-border)",
                 background:
-                  "#0f172a",
+                  "var(--ap-card2)",
                 color:
-                  "#ffffff",
+                  "var(--ap-text)",
                 outline: "none",
                 fontSize:
                   "13px",
@@ -461,7 +461,7 @@ export default function AdminRegistrations() {
               <div
                 style={{
                   color:
-                    "#94a3b8",
+                    "var(--ap-muted)",
                   fontSize:
                     "14px",
                 }}
@@ -510,7 +510,7 @@ export default function AdminRegistrations() {
                   style={{
                     margin: 0,
                     color:
-                      "#f87171",
+                      "var(--ap-bad-fg)",
                     fontSize:
                       "18px",
                   }}
@@ -522,7 +522,7 @@ export default function AdminRegistrations() {
                 <p
                   style={{
                     color:
-                      "#94a3b8",
+                      "var(--ap-muted)",
                     marginTop:
                       "8px",
                   }}
@@ -567,7 +567,7 @@ export default function AdminRegistrations() {
                     borderRadius:
                       "50%",
                     background:
-                      "#1e293b",
+                      "var(--ap-card2)",
                     display:
                       "flex",
                     alignItems:
@@ -587,7 +587,7 @@ export default function AdminRegistrations() {
                   style={{
                     margin: 0,
                     color:
-                      "#e2e8f0",
+                      "var(--ap-text)",
                     fontSize:
                       "21px",
                     fontWeight:
@@ -602,7 +602,7 @@ export default function AdminRegistrations() {
                     margin:
                       "9px 0 0",
                     color:
-                      "#64748b",
+                      "var(--ap-faint)",
                     fontSize:
                       "14px",
                   }}
@@ -691,7 +691,7 @@ export default function AdminRegistrations() {
                                 marginTop:
                                   "4px",
                                 color:
-                                  "#64748b",
+                                  "var(--ap-faint)",
                                 fontSize:
                                   "12px",
                               }}
@@ -768,11 +768,11 @@ function NavItem({
         border: "none",
         borderRadius: "7px",
         background: active
-          ? "#261c55"
+          ? "var(--ap-acc-bg)"
           : "transparent",
         color: active
-          ? "#a78bfa"
-          : "#cbd5e1",
+          ? "var(--ap-acc-fg)"
+          : "var(--ap-text)",
         cursor: "pointer",
         textAlign: "left",
         fontSize: "14px",
@@ -806,9 +806,9 @@ function StatCard({
   return (
     <div
       style={{
-        background: "#111827",
+        background: "var(--ap-card)",
         border:
-          "1px solid #263247",
+          "1px solid var(--ap-border)",
         borderRadius: "10px",
         padding: "20px",
         minHeight: "100px",
@@ -819,7 +819,7 @@ function StatCard({
       <div
         style={{
           color:
-            "#94a3b8",
+            "var(--ap-muted)",
           fontSize: "13px",
         }}
       >
@@ -833,7 +833,7 @@ function StatCard({
           fontSize: "28px",
           fontWeight: 700,
           color:
-            "#ffffff",
+            "var(--ap-text)",
         }}
       >
         {value}
@@ -854,27 +854,27 @@ function StatusBadge({
   ).toLowerCase();
 
   let background =
-    "#063b25";
+    "var(--ap-ok-bg)";
 
   let color =
-    "#22c55e";
+    "var(--ap-ok-fg)";
 
   if (
     value === "pending"
   ) {
     background =
-      "#422006";
+      "var(--ap-warn-bg)";
     color =
-      "#f59e0b";
+      "var(--ap-warn-fg)";
   }
 
   if (
     value === "cancelled"
   ) {
     background =
-      "#450a0a";
+      "var(--ap-bad-bg)";
     color =
-      "#f87171";
+      "var(--ap-bad-fg)";
   }
 
   return (
@@ -943,20 +943,20 @@ const thStyle = {
   padding:
     "14px 16px",
   background:
-    "#0f172a",
+    "var(--ap-card2)",
   color:
-    "#94a3b8",
+    "var(--ap-muted)",
   fontSize: "11px",
   borderBottom:
-    "1px solid #263247",
+    "1px solid var(--ap-border)",
 };
 
 const tdStyle = {
   padding:
     "16px",
   color:
-    "#e2e8f0",
+    "var(--ap-text)",
   fontSize: "13px",
   borderBottom:
-    "1px solid #202b3d",
+    "1px solid var(--ap-border)",
 };

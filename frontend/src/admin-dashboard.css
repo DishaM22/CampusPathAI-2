@@ -232,3 +232,348 @@
   .filter-bar .field.small { width: calc(50% - 5px); }
   .review-head { flex-direction: column; gap: 10px; }
 }
+/* ADMIN DASHBOARD - DARK MODE DEFAULT */
+
+.dashboard-shell {
+  --bg: #0B1120;
+  --surface: #111726;
+  --surface-2: #161D2F;
+  --border: #232B40;
+
+  --text: #EEF0F6;
+  --text-dim: #9BA3B4;
+  --text-faint: #6B7284;
+
+  --primary: #6C63FF;
+  --primary-ink: #FFFFFF;
+  --primary-soft: #1C1B3A;
+
+  background: var(--bg) !important;
+  color: var(--text) !important;
+}
+
+.dashboard-shell .sidebar,
+.dashboard-shell .topbar {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+
+.dashboard-shell .content {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+}
+
+.dashboard-shell .stat-card,
+.dashboard-shell .empty-state,
+.dashboard-shell .table-wrap,
+.dashboard-shell .review-card {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+
+.dashboard-shell .nav-item {
+  color: var(--text-dim) !important;
+}
+
+.dashboard-shell .nav-item.active {
+  background: var(--primary-soft) !important;
+  color: var(--primary) !important;
+}
+
+/* =====================================
+   ADMIN DASHBOARD - GLOBAL LIGHT THEME
+===================================== */
+
+:root[data-admin-theme="light"] .dashboard-shell {
+  --bg: #f3f6fc;
+  --surface: #ffffff;
+  --surface-2: #edf1f8;
+  --border: #dce3ef;
+  --text: #17243b;
+  --text-dim: #465670;
+  --text-faint: #687991;
+
+  background: #f3f6fc !important;
+  color: #17243b !important;
+}
+
+/* Main dashboard background */
+:root[data-admin-theme="light"] .dashboard-shell .content,
+:root[data-admin-theme="light"] .dashboard-shell main {
+  background: #f3f6fc !important;
+  color: #17243b !important;
+}
+
+/* Sidebar and topbar */
+:root[data-admin-theme="light"] .dashboard-shell .sidebar,
+:root[data-admin-theme="light"] .dashboard-shell .topbar {
+  background: #ffffff !important;
+  color: #17243b !important;
+  border-color: #dce3ef !important;
+}
+
+/* Cards and panels */
+:root[data-admin-theme="light"] .dashboard-shell .stat-card,
+:root[data-admin-theme="light"] .dashboard-shell .table-wrap,
+:root[data-admin-theme="light"] .dashboard-shell .empty-state,
+:root[data-admin-theme="light"] .dashboard-shell .review-card,
+:root[data-admin-theme="light"] .dashboard-shell .settings-card {
+  background: #ffffff !important;
+  color: #17243b !important;
+  border-color: #dce3ef !important;
+}
+
+/* Text */
+:root[data-admin-theme="light"] .dashboard-shell h1,
+:root[data-admin-theme="light"] .dashboard-shell h2,
+:root[data-admin-theme="light"] .dashboard-shell h3,
+:root[data-admin-theme="light"] .dashboard-shell p,
+:root[data-admin-theme="light"] .dashboard-shell label,
+:root[data-admin-theme="light"] .dashboard-shell td,
+:root[data-admin-theme="light"] .dashboard-shell th {
+  color: #17243b;
+}
+
+/* Navigation */
+:root[data-admin-theme="light"] .dashboard-shell .nav-item {
+  color: #465670 !important;
+}
+
+:root[data-admin-theme="light"] .dashboard-shell .nav-item.active {
+  background: #e9edff !important;
+  color: #394dc4 !important;
+}
+
+/* Inputs and dropdowns */
+:root[data-admin-theme="light"] .dashboard-shell input,
+:root[data-admin-theme="light"] .dashboard-shell select,
+:root[data-admin-theme="light"] .dashboard-shell textarea {
+  background: #ffffff !important;
+  color: #17243b !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Buttons */
+:root[data-admin-theme="light"] .dashboard-shell button {
+  color: #17243b;
+}
+
+:root[data-admin-theme="light"] .dashboard-shell button.primary,
+:root[data-admin-theme="light"] .dashboard-shell .btn-primary {
+  background: #5367e8 !important;
+  color: #ffffff !important;
+}
+/* =========================================
+   ADMIN - COMPLETE LIGHT THEME COMPONENTS
+========================================= */
+
+:root[data-admin-theme="light"] .dashboard-shell {
+  color-scheme: light;
+
+  --bg: #f3f6fc;
+  --surface: #ffffff;
+  --surface-2: #edf1f8;
+  --border: #dce3ef;
+
+  --text: #17243b;
+  --text-dim: #465670;
+  --text-faint: #687991;
+
+  --primary: #5367e8;
+  --primary-ink: #ffffff;
+  --primary-soft: #e9edff;
+
+  --ai-soft: #eef0ff;
+  --success-soft: #e7f7ee;
+  --warn-soft: #fff5df;
+  --danger-soft: #ffeded;
+}
+
+/* All page backgrounds */
+:root[data-admin-theme="light"] .dashboard-shell,
+:root[data-admin-theme="light"] .dashboard-main,
+:root[data-admin-theme="light"] .content {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+}
+
+/* Sidebar and topbar */
+:root[data-admin-theme="light"] .dashboard-shell .sidebar,
+:root[data-admin-theme="light"] .dashboard-shell .topbar {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+
+/* Cards and containers */
+:root[data-admin-theme="light"] .dashboard-shell .stat-card,
+:root[data-admin-theme="light"] .dashboard-shell .review-card,
+:root[data-admin-theme="light"] .dashboard-shell .empty-state,
+:root[data-admin-theme="light"] .dashboard-shell .table-wrap,
+:root[data-admin-theme="light"] .dashboard-shell .modal-panel,
+:root[data-admin-theme="light"] .dashboard-shell .dropdown-panel,
+:root[data-admin-theme="light"] .dashboard-shell .gate-card {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+
+/* Nested panels */
+:root[data-admin-theme="light"] .dashboard-shell .sidebar-role,
+:root[data-admin-theme="light"] .dashboard-shell .search,
+:root[data-admin-theme="light"] .dashboard-shell .field,
+:root[data-admin-theme="light"] .dashboard-shell .document-row,
+:root[data-admin-theme="light"] .dashboard-shell .gate-next,
+:root[data-admin-theme="light"] .dashboard-shell .gate-reason-card {
+  background: var(--surface-2) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+
+/* Headings and text */
+:root[data-admin-theme="light"] .dashboard-shell h1,
+:root[data-admin-theme="light"] .dashboard-shell h2,
+:root[data-admin-theme="light"] .dashboard-shell h3,
+:root[data-admin-theme="light"] .dashboard-shell .stat-value,
+:root[data-admin-theme="light"] .dashboard-shell .org-name,
+:root[data-admin-theme="light"] .dashboard-shell .detail-list dd,
+:root[data-admin-theme="light"] .dashboard-shell .doc-name {
+  color: var(--text) !important;
+}
+
+:root[data-admin-theme="light"] .dashboard-shell p,
+:root[data-admin-theme="light"] .dashboard-shell label,
+:root[data-admin-theme="light"] .dashboard-shell .stat-label,
+:root[data-admin-theme="light"] .dashboard-shell .review-sub,
+:root[data-admin-theme="light"] .dashboard-shell .pagination,
+:root[data-admin-theme="light"] .dashboard-shell .detail-list dt {
+  color: var(--text-dim) !important;
+}
+
+/* Tables */
+:root[data-admin-theme="light"] .dashboard-shell .data-table th {
+  color: var(--text-faint) !important;
+  border-color: var(--border) !important;
+}
+
+:root[data-admin-theme="light"] .dashboard-shell .data-table td {
+  color: var(--text-dim) !important;
+  border-color: var(--border) !important;
+}
+
+/* Inputs */
+:root[data-admin-theme="light"] .dashboard-shell input,
+:root[data-admin-theme="light"] .dashboard-shell select,
+:root[data-admin-theme="light"] .dashboard-shell textarea {
+  background: #ffffff !important;
+  color: var(--text) !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Navigation */
+:root[data-admin-theme="light"] .dashboard-shell .nav-item {
+  color: var(--text-dim) !important;
+}
+
+:root[data-admin-theme="light"] .dashboard-shell .nav-item:hover,
+:root[data-admin-theme="light"] .dashboard-shell .nav-item.active {
+  background: var(--primary-soft) !important;
+  color: #394dc4 !important;
+}
+
+/* Buttons */
+:root[data-admin-theme="light"] .dashboard-shell .btn-ghost {
+  background: #ffffff !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+
+:root[data-admin-theme="light"] .dashboard-shell .btn-primary {
+  background: var(--primary) !important;
+  color: #ffffff !important;
+}
+
+/* Notification dropdown */
+:root[data-admin-theme="light"] .dashboard-shell .notif-row.unread {
+  background: var(--ai-soft) !important;
+}
+
+/* Borders */
+:root[data-admin-theme="light"] .dashboard-shell .verify-row,
+:root[data-admin-theme="light"] .dashboard-shell .nav-item.logout {
+  border-color: var(--border) !important;
+}
+
+/* =====================================================================
+   ADMIN PAGES THAT USE INLINE STYLES (Events, Registrations, Analytics,
+   Notifications, Activity Logs, Settings)
+   Each page wraps itself in .admin-page. Dark is the default; light is
+   switched on by <html data-admin-theme="light"> (set in Settings).
+   To change a color, edit the values below - nowhere else.
+===================================================================== */
+
+.admin-page {
+  --ap-page: #080d1c;
+  --ap-card: #111827;
+  --ap-card2: #0f172a;
+  --ap-border: #26344d;
+  --ap-text: #ffffff;
+  --ap-muted: #94a3b8;
+  --ap-faint: #64748b;
+
+  --ap-ok-bg: #063b25;   --ap-ok-fg: #4ade80;
+  --ap-bad-bg: #3a1518;  --ap-bad-fg: #ff8b8b;  --ap-bad-border: #7f2930;
+  --ap-warn-bg: #422006; --ap-warn-fg: #f59e0b;
+  --ap-acc-bg: #261c55;  --ap-acc-fg: #a78bfa;
+}
+
+:root[data-admin-theme="light"] .admin-page {
+  --ap-page: #f3f6fc;
+  --ap-card: #ffffff;
+  --ap-card2: #edf1f8;
+  --ap-border: #dce3ef;
+  --ap-text: #17243b;
+  --ap-muted: #5c6b85;
+  --ap-faint: #687991;
+
+  --ap-ok-bg: #dcfce7;   --ap-ok-fg: #166534;
+  --ap-bad-bg: #fee2e2;  --ap-bad-fg: #b91c1c;  --ap-bad-border: #fca5a5;
+  --ap-warn-bg: #fef3c7; --ap-warn-fg: #92400e;
+  --ap-acc-bg: #e9edff;  --ap-acc-fg: #394dc4;
+
+  /* the shared sidebar reads these */
+  --bg: #f3f6fc;
+  --surface: #ffffff;
+  --surface-2: #edf1f8;
+  --border: #dce3ef;
+  --text: #17243b;
+  --text-dim: #465670;
+  --text-faint: #687991;
+  --primary: #394dc4;
+  --primary-soft: #e9edff;
+}
+
+:root[data-admin-theme="light"] .admin-page .sidebar {
+  background: #ffffff;
+  color: #17243b;
+  border-color: #dce3ef;
+}
+
+:root[data-admin-theme="light"] .admin-page .nav-item { color: #465670; }
+:root[data-admin-theme="light"] .admin-page .nav-item:hover { background: #edf1f8; color: #17243b; }
+:root[data-admin-theme="light"] .admin-page .nav-item.active { background: #e9edff; color: #394dc4; }
+:root[data-admin-theme="light"] .admin-page .nav-item.logout { color: #b91c1c; }
+
+
+/* Light mode for the admin sidebar (classes from admin/components/Sidebar.jsx) */
+:root[data-admin-theme="light"] :is(.admin-page, .dashboard-shell) .sidebar { background: #ffffff; border-color: #dce3ef; }
+:root[data-admin-theme="light"] :is(.admin-page, .dashboard-shell) .sidebar-brand-title { color: #17243b !important; }
+:root[data-admin-theme="light"] :is(.admin-page, .dashboard-shell) .sidebar-brand-role { color: #394dc4 !important; }
+:root[data-admin-theme="light"] :is(.admin-page, .dashboard-shell) .sidebar-toggle { color: #17243b !important; background: transparent !important; border-color: #dce3ef !important; }
+:root[data-admin-theme="light"] :is(.admin-page, .dashboard-shell) .sidebar-nav-item { color: #465670 !important; background: transparent !important; }
+:root[data-admin-theme="light"] :is(.admin-page, .dashboard-shell) .sidebar-nav-item:hover { background: #edf1f8 !important; color: #17243b !important; }
+:root[data-admin-theme="light"] :is(.admin-page, .dashboard-shell) .sidebar-nav-item.active { background: #e9edff !important; color: #394dc4 !important; }
+:root[data-admin-theme="light"] :is(.admin-page, .dashboard-shell) .sidebar-footer { border-color: #dce3ef !important; }
+:root[data-admin-theme="light"] :is(.admin-page, .dashboard-shell) .sidebar-nav-item.logout-item { color: #b91c1c !important; }

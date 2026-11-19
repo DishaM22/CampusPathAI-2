@@ -2425,3 +2425,25 @@
     flex-direction: column;
   }
 }
+
+/* =========================================
+   ADMIN PAGES - LIGHT MODE
+========================================= */
+
+:root[data-admin-theme="light"] .admin-events-page,
+:root[data-admin-theme="light"] .admin-registrations-page,
+:root[data-admin-theme="light"] .admin-analytics-page,
+:root[data-admin-theme="light"] .admin-activity-page {
+  background: #f8fafc !important;
+  color: #1e293b !important;
+}
+
+:root[data-admin-theme="light"] .admin-registrations-sidebar {
+  background: #ffffff !important;
+  border-right: 1px solid #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+:root[data-admin-theme="light"] .admin-registrations-sidebar * {
+  color: #1e293b !important;
+}

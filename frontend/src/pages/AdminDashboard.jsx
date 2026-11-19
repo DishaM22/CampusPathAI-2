@@ -5,6 +5,9 @@ import Sidebar from "../admin/components/Sidebar";
 import TopBar from "../admin/components/TopBar";
 import StatCard from "../admin/components/StatCard";
 import ApplicationsTable from "../admin/components/ApplicationsTable";
+import AdminEventApprovals from "../admin/components/AdminEventApprovals";
+import AcademicProgression from "../admin/components/AcademicProgression";
+import AdminModificationRequests from "../admin/components/AdminModificationRequests";
 import ConfirmModal from "../admin/components/ConfirmModal";
 import RejectModal from "../admin/components/RejectModal";
 
@@ -21,12 +24,15 @@ import {
   rejectApplication,
 } from "../adminService";
 
+import { approveText } from "../admin/applicationUtils";
+
 import "../admin-dashboard.css";
 
 const SAMPLE_DASHBOARD = {
   kpis: {
     pendingApplications: 0,
     approvedOrganizations: 0,
+    approvedFaculty: 0,
     rejectedApplications: 0,
     totalUsers: 0,
     publishedEvents: 0,
@@ -282,8 +288,8 @@ export default function AdminDashboard() {
 
             <p>
               CampusPath AI Admin Dashboard —
-              verify organizations and keep the
-              platform trustworthy.
+              verify organizations and faculty accounts
+              and keep the platform trustworthy.
             </p>
 
           </div>
@@ -404,7 +410,7 @@ export default function AdminDashboard() {
               <div className="section-head">
 
                 <h2>
-                  ⚠️ Pending organization applications
+                  ⚠️ Pending applications
                 </h2>
 
                 <button
@@ -425,7 +431,7 @@ export default function AdminDashboard() {
 
                 <EmptyState
                   title="No Pending Applications"
-                  message="All organization applications have been reviewed."
+                  message="All applications have been reviewed."
                 />
 
               ) : (
@@ -445,6 +451,27 @@ export default function AdminDashboard() {
 
               )}
 
+              {/* =================================================
+                  EVENT APPROVALS (HOD -> Dean -> Admin)
+              ================================================= */}
+
+              <AdminEventApprovals
+                embedded
+                onChanged={loadDashboard}
+              />
+
+              {/* =================================================
+                  PUBLISHED EVENT MODIFICATION REQUESTS (Admin only)
+              ================================================= */}
+
+              <AdminModificationRequests />
+
+              {/* =================================================
+                  ACADEMIC PROGRESSION (Admin only)
+              ================================================= */}
+
+              <AcademicProgression />
+
             </>
           )}
 
@@ -457,10 +484,14 @@ export default function AdminDashboard() {
 
       <ConfirmModal
         open={!!confirmApp}
-        title="Approve Organization?"
+        title={
+          confirmApp
+            ? approveText(confirmApp).title
+            : "Approve?"
+        }
         message={
           confirmApp
-            ? `Approving "${confirmApp.organizationName}" will activate the organization account.`
+            ? approveText(confirmApp).message
             : ""
         }
         confirmLabel="Approve"

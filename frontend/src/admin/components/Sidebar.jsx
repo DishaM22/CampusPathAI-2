@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./Sidebar.css";
 
@@ -21,6 +21,14 @@ const ADMIN_NAV = [
     icon: "👥",
     path: "/admin/users",
   },
+
+  {
+    key: "classes",
+    label: "Class & Timetable",
+    icon: "🗓️",
+    path: "/admin/classes",
+  },
+  
   {
     key: "events",
     label: "Events",
@@ -105,6 +113,25 @@ export default function Sidebar({
 }) {
   const navigate = useNavigate();
   const location = useLocation();
+
+  // On every admin page, apply the theme saved in Settings
+  // (so a refresh or a page change never falls back to dark).
+  useEffect(() => {
+    if (role !== "admin") return;
+
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem("campusPathAdminSettings") || "{}"
+      );
+
+      document.documentElement.setAttribute(
+        "data-admin-theme",
+        saved.theme === "light" ? "light" : "dark"
+      );
+    } catch {
+      document.documentElement.setAttribute("data-admin-theme", "dark");
+    }
+  }, [role]);
 
   let items = ADMIN_NAV;
 

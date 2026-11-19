@@ -1,0 +1,40 @@
+{
+  "special_tokens": {
+    "[PAD]": 0,
+    "[MASK]": 1,
+    "[UNK]": 2
+  },
+  "actions": {
+    "[PAD]": 0,
+    "[MASK]": 1,
+    "[UNK]": 2,
+    "view": 3,
+    "save": 4,
+    "unsave": 5,
+    "register": 6,
+    "unregister": 7,
+    "attend": 8,
+    "not_interested": 9
+  },
+  "categories": {
+    "[PAD]": 0,
+    "[MASK]": 1,
+    "[UNK]": 2,
+    "workshop": 3,
+    "technical": 4,
+    "entrepreneurship": 5,
+    "other": 6,
+    "competition": 7,
+    "hackathon": 8
+  },
+  "organizers": {
+    "[PAD]": 0,
+    "[MASK]": 1,
+    "[UNK]": 2,
+    "beta club": 3,
+    "alpha club": 4,
+    "cyberphantom club": 5,
+    "ai club": 6
+  },
+  "max_len": 30
+}

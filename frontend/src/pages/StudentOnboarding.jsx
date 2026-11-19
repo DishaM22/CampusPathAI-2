@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./StudentOnboarding.css";
 
-import TimetablePage from "../features/onboarding/timetable/TimetablePage";
+import { ClassSelectStep } from "../features/studentClass/StudentClass";
 
 const steps = [
   "Academic",
@@ -10,7 +10,7 @@ const steps = [
   "Skills",
   "Goals",
   "Domains",
-  "Timetable",
+  "Class",
 ];
 
 const interestOptions = [
@@ -242,138 +242,44 @@ function StudentOnboarding() {
 };
 
   // ============================================================
-  // TIMETABLE COMPLETED
+  // CLASS CHOSEN
+  // ClassSelectStep has already saved the class and the availability
+  // preferences. Nothing else is uploaded here any more.
   // ============================================================
 
-  const handleTimetableContinue = async (timetableData) => {
-    console.log(
-        "TIMETABLE SAVED:",
-        timetableData
-    );
+  const handleClassDone = () => {
+    const studentEmail = (
+      localStorage.getItem("userEmail") || ""
+    )
+      .trim()
+      .toLowerCase();
 
-    try {
-        const token = localStorage.getItem("token");
-
-        if (!token) {
-            alert("Authentication token not found. Please login again.");
-            return;
-        }
-
-        // Save timetable to backend / MongoDB
-        const response = await fetch(
-            "http://127.0.0.1:8000/api/student/timetable",
-            {
-                method: "POST",
-
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-
-                body: JSON.stringify({
-                    timetable:
-                        timetableData?.timetable || timetableData || {},
-
-                    config:
-                        timetableData?.config || {},
-
-                    preferences:
-                        timetableData?.preferences || {},
-                }),
-            }
-        );
-
-        let data = {};
-
-        try {
-            data = await response.json();
-        } catch {
-            data = {};
-        }
-
-        console.log(
-            "TIMETABLE SAVE STATUS:",
-            response.status
-        );
-
-        console.log(
-            "TIMETABLE SAVE RESPONSE:",
-            data
-        );
-
-        if (!response.ok) {
-            throw new Error(
-                data.detail ||
-                data.message ||
-                "Failed to save timetable."
-            );
-        }
-
-        console.log(
-            "Timetable saved successfully to MongoDB."
-        );
-
-        // Keep local backup
-        if (timetableData) {
-            localStorage.setItem(
-                "campusPathTimetable",
-                JSON.stringify(timetableData)
-            );
-        }
-
-        // ==========================================
-        // ONBOARDING IS NOW FULLY COMPLETED
-        // Steps 1–5 + Step 6 Timetable
-        // ==========================================
-
-        const studentEmail = (
-            localStorage.getItem("userEmail") || ""
-        )
-            .trim()
-            .toLowerCase();
-
-        if (studentEmail) {
-            localStorage.setItem(
-                `onboardingCompleted_${studentEmail}`,
-                "true"
-            );
-        }
-
-        // Keep old flag for compatibility
-        localStorage.setItem(
-            "profileCompleted",
-            "true"
-        );
-
-        // Go to student dashboard
-        navigate("/dashboard");
-
-    } catch (error) {
-        console.error(
-            "TIMETABLE SAVE ERROR:",
-            error
-        );
-
-        alert(
-            error.message ||
-            "Failed to save timetable. Please try again."
-        );
+    if (studentEmail) {
+      localStorage.setItem(
+        `onboardingCompleted_${studentEmail}`,
+        "true"
+      );
     }
-};
 
-   
+    // Keep old flag for compatibility
+    localStorage.setItem("profileCompleted", "true");
+
+    navigate("/dashboard");
+  };
+
   // ============================================================
-  // STEP 6 - TIMETABLE
+  // STEP 6 - SELECT YOUR OFFICIAL CLASS
   //
-  // This is returned separately so that the timetable page
-  // does not get the old onboarding header/navigation around it.
+  // Returned separately (like the old timetable step) so it has its
+  // own header and progress bar.
   // ============================================================
 
   if (currentStep === 6) {
     return (
-      <TimetablePage
+      <ClassSelectStep
+        profile={profile}
         onBack={() => setCurrentStep(5)}
-        onContinue={handleTimetableContinue}
+        onDone={handleClassDone}
       />
     );
   }
@@ -1133,9 +1039,7 @@ function DomainsStep({
 
         <p>
           Great! Your profile is almost ready.
-          Next, we will collect your timetable
-          so CampusPath AI can recommend events
-          during your available periods.
+          Next, you will choose your official class so CampusPath AI can use your university timetable to recommend events during your free periods.
         </p>
 
       </div>

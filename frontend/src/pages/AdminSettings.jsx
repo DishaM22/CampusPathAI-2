@@ -22,6 +22,18 @@ export default function AdminSettings() {
     useState(true);
 
   const [saved, setSaved] = useState(false);
+  // Start from the theme saved last time, so coming back to this page
+  // does not reset it to dark.
+  const [theme, setTheme] = useState(() => {
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem("campusPathAdminSettings") || "{}"
+      );
+      return saved.theme === "light" ? "light" : "dark";
+    } catch {
+      return "dark";
+    }
+  });
 
   // ============================================================
   // LOAD ADMIN INFORMATION
@@ -66,6 +78,8 @@ export default function AdminSettings() {
         setRegistrationNotifications(
           settings.registrationNotifications ?? true
         );
+
+        setTheme(settings.theme || "dark");
       }
     } catch (error) {
       console.error(
@@ -74,6 +88,25 @@ export default function AdminSettings() {
       );
     }
   }, []);
+
+  // Apply the theme to the whole admin area and remember it right away
+  // (no need to press Save for the theme to stick).
+  useEffect(() => {
+    document.documentElement.setAttribute("data-admin-theme", theme);
+
+    try {
+      const stored = JSON.parse(
+        localStorage.getItem("campusPathAdminSettings") || "{}"
+      );
+
+      localStorage.setItem(
+        "campusPathAdminSettings",
+        JSON.stringify({ ...stored, theme })
+      );
+    } catch (error) {
+      console.error("Failed to save theme:", error);
+    }
+  }, [theme]);
 
   // ============================================================
   // SAVE SETTINGS
@@ -84,6 +117,7 @@ export default function AdminSettings() {
       applicationNotifications,
       eventNotifications,
       registrationNotifications,
+      theme,
     };
 
     localStorage.setItem(
@@ -136,11 +170,11 @@ export default function AdminSettings() {
   // ============================================================
 
   return (
-    <div
+    <div className="admin-page"
       style={{
         minHeight: "100vh",
-        background: "#080d1c",
-        color: "#ffffff",
+        background: theme === "dark" ? "#080d1c" : "#f3f6fc",
+        color: theme === "dark" ? "#ffffff" : "#17243b",
       }}
     >
       {/* ======================================================
@@ -167,6 +201,14 @@ export default function AdminSettings() {
           MAIN CONTENT
       ====================================================== */}
 
+      <style>{`
+        @media (max-width: 700px) {
+          .admin-settings-grid {
+            grid-template-columns: minmax(0, 1fr) !important;
+          }
+        }
+      `}</style>
+
       <main
         style={{
           position: "fixed",
@@ -175,7 +217,8 @@ export default function AdminSettings() {
           bottom: 0,
           left: collapsed ? "80px" : "200px",
           overflowY: "auto",
-          background: "#080d1c",
+          background: theme === "dark" ? "#080d1c" : "#f3f6fc",
+          color: theme === "dark" ? "#ffffff" : "#17243b",
           padding: "32px",
           boxSizing: "border-box",
         }}
@@ -198,7 +241,7 @@ export default function AdminSettings() {
                 margin: 0,
                 fontSize: "32px",
                 fontWeight: "700",
-                color: "#ffffff",
+                color: theme === "dark" ? "#ffffff" : "#17243b",
               }}
             >
               Settings
@@ -208,7 +251,7 @@ export default function AdminSettings() {
               style={{
                 marginTop: "8px",
                 marginBottom: 0,
-                color: "#94a3b8",
+                color: theme === "dark" ? "#94a3b8" : "#64748b",
                 fontSize: "14px",
               }}
             >
@@ -240,8 +283,8 @@ export default function AdminSettings() {
 
         <section
           style={{
-            background: "#111827",
-            border: "1px solid #26344d",
+            background: theme === "dark" ? "#111827" : "#ffffff",
+            border: `1px solid ${theme === "dark" ? "#26344d" : "#dce3ef"}`,
             borderRadius: "12px",
             padding: "24px",
             marginBottom: "20px",
@@ -263,22 +306,26 @@ export default function AdminSettings() {
             <InfoField
               label="Full Name"
               value={adminName}
+              theme={theme}
             />
 
             <InfoField
               label="Email Address"
               value={adminEmail || "Not available"}
+              theme={theme}
             />
 
             <InfoField
               label="Role"
               value="Administrator"
+              theme={theme}
             />
 
             <InfoField
               label="Account Status"
               value="Active"
               status
+              theme={theme}
             />
           </div>
         </section>
@@ -289,8 +336,8 @@ export default function AdminSettings() {
 
         <section
           style={{
-            background: "#111827",
-            border: "1px solid #26344d",
+            background: theme === "dark" ? "#111827" : "#ffffff",
+            border: `1px solid ${theme === "dark" ? "#26344d" : "#dce3ef"}`,
             borderRadius: "12px",
             padding: "24px",
             marginBottom: "20px",
@@ -317,16 +364,19 @@ export default function AdminSettings() {
             <InfoField
               label="Application Type"
               value="University Event Recommendation Platform"
+              theme={theme}
             />
 
             <InfoField
               label="Administrator Panel"
               value="Admin Dashboard"
+              theme={theme}
             />
 
             <InfoField
               label="Authentication"
               value="JWT Authentication"
+              theme={theme}
             />
           </div>
         </section>
@@ -337,8 +387,8 @@ export default function AdminSettings() {
 
         <section
           style={{
-            background: "#111827",
-            border: "1px solid #26344d",
+            background: theme === "dark" ? "#111827" : "#ffffff",
+            border: `1px solid ${theme === "dark" ? "#26344d" : "#dce3ef"}`,
             borderRadius: "12px",
             padding: "24px",
             marginBottom: "20px",
@@ -354,6 +404,7 @@ export default function AdminSettings() {
             description="Receive notifications when clubs or intercollege organizations submit applications."
             checked={applicationNotifications}
             onChange={setApplicationNotifications}
+            theme={theme}
           />
 
           <SettingRow
@@ -361,6 +412,7 @@ export default function AdminSettings() {
             description="Receive notifications related to newly created or published events."
             checked={eventNotifications}
             onChange={setEventNotifications}
+            theme={theme}
           />
 
           <SettingRow
@@ -368,6 +420,7 @@ export default function AdminSettings() {
             description="Receive notifications when students register for events."
             checked={registrationNotifications}
             onChange={setRegistrationNotifications}
+            theme={theme}
           />
 
           <div
@@ -380,9 +433,9 @@ export default function AdminSettings() {
               style={{
                 padding: "9px 15px",
                 borderRadius: "7px",
-                border: "1px solid #334155",
-                background: "#1e293b",
-                color: "#cbd5e1",
+                border: `1px solid ${theme === "dark" ? "#334155" : "#cbd5e1"}`,
+                background: theme === "dark" ? "#1e293b" : "#edf1f8",
+                color: theme === "dark" ? "#cbd5e1" : "#17243b",
                 cursor: "pointer",
               }}
             >
@@ -397,8 +450,8 @@ export default function AdminSettings() {
 
         <section
           style={{
-            background: "#111827",
-            border: "1px solid #26344d",
+            background: theme === "dark" ? "#111827" : "#ffffff",
+            border: `1px solid ${theme === "dark" ? "#26344d" : "#dce3ef"}`,
             borderRadius: "12px",
             padding: "24px",
             marginBottom: "20px",
@@ -420,23 +473,27 @@ export default function AdminSettings() {
             <InfoField
               label="Authentication Method"
               value="JWT"
+              theme={theme}
             />
 
             <InfoField
               label="Session"
               value="Authenticated"
               status
+              theme={theme}
             />
 
             <InfoField
               label="Administrator Access"
               value="Enabled"
               status
+              theme={theme}
             />
 
             <InfoField
               label="Account Role"
               value="admin"
+              theme={theme}
             />
           </div>
         </section>
@@ -447,16 +504,18 @@ export default function AdminSettings() {
 
         <section
           style={{
-            background: "#111827",
-            border: "1px solid #26344d",
+            background: theme === "dark" ? "#111827" : "#ffffff",
+            border: `1px solid ${theme === "dark" ? "#26344d" : "#dce3ef"}`,
             borderRadius: "12px",
             padding: "24px",
             marginBottom: "20px",
+            color: theme === "dark" ? "#ffffff" : "#17243b",
           }}
         >
           <SectionTitle
             title="Appearance"
-            description="Current CampusPath AI administrator interface appearance."
+            description="Customize your CampusPath AI administrator dashboard."
+            theme={theme}
           />
 
           <div
@@ -464,9 +523,10 @@ export default function AdminSettings() {
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
+              gap: "20px",
               padding: "16px",
-              background: "#0b1220",
-              border: "1px solid #26344d",
+              background: theme === "dark" ? "#0b1220" : "#f3f6fc",
+              border: `1px solid ${theme === "dark" ? "#26344d" : "#dce3ef"}`,
               borderRadius: "9px",
             }}
           >
@@ -475,34 +535,40 @@ export default function AdminSettings() {
                 style={{
                   fontWeight: "600",
                   marginBottom: "5px",
+                  color: theme === "dark" ? "#ffffff" : "#17243b",
                 }}
               >
-                Dark Mode
+                Theme
               </div>
 
               <div
                 style={{
-                  color: "#94a3b8",
+                  color: theme === "dark" ? "#94a3b8" : "#64748b",
                   fontSize: "13px",
                 }}
               >
-                CampusPath AI currently uses the dark
-                administrator interface.
+                Choose dark or light mode for your dashboard.
               </div>
             </div>
 
-            <div
+            <select
+              value={theme}
+              onChange={(event) => setTheme(event.target.value)}
+              aria-label="Choose dashboard theme"
               style={{
-                padding: "7px 13px",
-                borderRadius: "999px",
-                background: "#312e81",
-                color: "#c4b5fd",
-                fontSize: "12px",
-                fontWeight: "700",
+                padding: "10px 14px",
+                borderRadius: "8px",
+                border: `1px solid ${theme === "dark" ? "#475569" : "#cbd5e1"}`,
+                background: theme === "dark" ? "#111827" : "#ffffff",
+                color: theme === "dark" ? "#ffffff" : "#17243b",
+                cursor: "pointer",
+                minWidth: "145px",
+                fontSize: "14px",
               }}
             >
-              ACTIVE
-            </div>
+              <option value="dark">Dark Mode</option>
+              <option value="light">Light Mode</option>
+            </select>
           </div>
         </section>
 
@@ -526,8 +592,8 @@ export default function AdminSettings() {
               padding: "11px 20px",
               borderRadius: "8px",
               border: "1px solid #334155",
-              background: "#111827",
-              color: "#ffffff",
+              background: theme === "dark" ? "#111827" : "#ffffff",
+              color: theme === "dark" ? "#ffffff" : "#17243b",
               cursor: "pointer",
             }}
           >
@@ -561,6 +627,7 @@ export default function AdminSettings() {
 function SectionTitle({
   title,
   description,
+  theme = "dark",
 }) {
   return (
     <div
@@ -572,7 +639,7 @@ function SectionTitle({
         style={{
           margin: 0,
           fontSize: "19px",
-          color: "#ffffff",
+          color: theme === "dark" ? "#ffffff" : "#17243b",
         }}
       >
         {title}
@@ -581,7 +648,7 @@ function SectionTitle({
       <p
         style={{
           margin: "6px 0 0",
-          color: "#64748b",
+          color: theme === "dark" ? "#64748b" : "#64748b",
           fontSize: "13px",
         }}
       >
@@ -599,13 +666,14 @@ function InfoField({
   label,
   value,
   status = false,
+  theme = "dark",
 }) {
   return (
     <div
       style={{
         padding: "15px",
-        background: "#0b1220",
-        border: "1px solid #26344d",
+        background: theme === "dark" ? "#0b1220" : "#f8fafc",
+        border: `1px solid ${theme === "dark" ? "#26344d" : "#dce3ef"}`,
         borderRadius: "9px",
       }}
     >
@@ -622,8 +690,8 @@ function InfoField({
       <div
         style={{
           color: status
-            ? "#86efac"
-            : "#e2e8f0",
+            ? "#16a34a"
+            : theme === "dark" ? "#e2e8f0" : "#17243b",
           fontSize: "14px",
           fontWeight: "600",
         }}
@@ -643,6 +711,7 @@ function SettingRow({
   description,
   checked,
   onChange,
+  theme = "dark",
 }) {
   return (
     <div
@@ -652,13 +721,13 @@ function SettingRow({
         alignItems: "center",
         gap: "20px",
         padding: "18px 0",
-        borderBottom: "1px solid #26344d",
+        borderBottom: `1px solid ${theme === "dark" ? "#26344d" : "#dce3ef"}`,
       }}
     >
       <div>
         <div
           style={{
-            color: "#ffffff",
+            color: theme === "dark" ? "#ffffff" : "#17243b",
             fontWeight: "600",
             fontSize: "14px",
             marginBottom: "5px",

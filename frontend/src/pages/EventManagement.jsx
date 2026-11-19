@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { DEPARTMENTS } from "../departments";
 
 /* FastAPI sends validation errors as a LIST of objects. This turns any
    error detail into readable text (instead of "[object Object]"). */
@@ -24,6 +25,72 @@ function formatApiDetail(detail) {
   return detail.msg || JSON.stringify(detail);
 }
 
+// Existing categories are kept; "Other" is now "Others" like the other forms.
+const EVENT_CATEGORIES = [
+  "Technical",
+  "Workshop",
+  "Hackathon",
+  "Seminar",
+  "Sports",
+  "Cultural",
+  "Career",
+  "Conference",
+  "Masterclass",
+  "Webinar",
+  "Industry Visit",
+  "Camp",
+  "FDP",
+  "SDP",
+  "MDP",
+  "Guest Lecturers",
+  "Others",
+];
+
+const EVENT_MODES = ["Online", "Offline", "Hybrid"];
+
+const EMAIL_REGEX = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/;
+
+/* 10-digit Indian mobile; +91 / 91 / 0 prefixes, spaces and dashes allowed. */
+function normalizeIndianMobile(value) {
+  let digits = String(value || "").replace(/[\s\-().]/g, "");
+
+  if (digits.startsWith("+91")) digits = digits.slice(3);
+  else if (digits.length === 12 && digits.startsWith("91")) digits = digits.slice(2);
+  else if (digits.length === 11 && digits.startsWith("0")) digits = digits.slice(1);
+
+  return digits;
+}
+
+/* Returns the first problem as readable text, or "" if all is well.
+   The backend repeats these checks. */
+function validateEventDetails(data) {
+  if (!data.school_name.trim()) return "School name is required.";
+  if (!DEPARTMENTS.includes(data.department)) {
+    return "Please select the department from the list.";
+  }
+
+  if (!EVENT_MODES.includes(data.event_mode)) {
+    return "Please select the mode of the event (Online, Offline or Hybrid).";
+  }
+
+  if (data.event_mode !== "Online" && !data.location.trim()) {
+    return "Location is required for Offline and Hybrid events.";
+  }
+
+  if (!data.spoc_name.trim()) return "SPOC name is required.";
+  if (!data.spoc_designation.trim()) return "SPOC designation is required.";
+
+  if (!EMAIL_REGEX.test(data.spoc_email.trim())) {
+    return "Enter a valid SPOC email address.";
+  }
+
+  if (!/^[6-9][0-9]{9}$/.test(normalizeIndianMobile(data.spoc_contact))) {
+    return "Enter a valid 10-digit SPOC mobile number (starting with 6, 7, 8 or 9).";
+  }
+
+  return "";
+}
+
 function EventManagement() {
   const [formData, setFormData] = useState({
     title: "",
@@ -34,7 +101,14 @@ function EventManagement() {
     time: "",
     location: "",
     capacity: "",
-    skills: ""
+    skills: "",
+    school_name: "",
+    department: "",
+    event_mode: "",
+    spoc_name: "",
+    spoc_designation: "",
+    spoc_email: "",
+    spoc_contact: ""
   });
 
   const [message, setMessage] = useState("");
@@ -137,6 +211,14 @@ function EventManagement() {
       return;
     }
 
+    const detailsProblem = validateEventDetails(formData);
+
+    if (detailsProblem) {
+      setMessage(detailsProblem);
+      setLoading(false);
+      return;
+    }
+
     const eventData = {
       title: formData.title.trim(),
       description: formData.description.trim(),
@@ -145,6 +227,14 @@ function EventManagement() {
       date: formData.date,
       time: formData.time.trim(),
       location: formData.location.trim(),
+
+      school_name: formData.school_name.trim(),
+      department: formData.department.trim(),
+      event_mode: formData.event_mode,
+      spoc_name: formData.spoc_name.trim(),
+      spoc_designation: formData.spoc_designation.trim(),
+      spoc_email: formData.spoc_email.trim(),
+      spoc_contact: normalizeIndianMobile(formData.spoc_contact),
 
       // IMPORTANT
       capacity: capacity,
@@ -198,7 +288,14 @@ function EventManagement() {
           time: "",
           location: "",
           capacity: "",
-          skills: ""
+          skills: "",
+          school_name: "",
+          department: "",
+          event_mode: "",
+          spoc_name: "",
+          spoc_designation: "",
+          spoc_email: "",
+          spoc_contact: ""
         });
       } else {
         setMessage(
@@ -263,37 +360,11 @@ function EventManagement() {
               Select Category
             </option>
 
-            <option value="Technical">
-              Technical
-            </option>
-
-            <option value="Workshop">
-              Workshop
-            </option>
-
-            <option value="Hackathon">
-              Hackathon
-            </option>
-
-            <option value="Seminar">
-              Seminar
-            </option>
-
-            <option value="Sports">
-              Sports
-            </option>
-
-            <option value="Cultural">
-              Cultural
-            </option>
-
-            <option value="Career">
-              Career
-            </option>
-
-            <option value="Other">
-              Other
-            </option>
+            {EVENT_CATEGORIES.map((categoryName) => (
+              <option key={categoryName} value={categoryName}>
+                {categoryName}
+              </option>
+            ))}
           </select>
 
           {/* ORGANIZER */}
@@ -325,15 +396,111 @@ function EventManagement() {
             required
           />
 
-          {/* LOCATION */}
+          {/* LOCATION (optional for Online events) */}
           <input
             type="text"
             name="location"
-            placeholder="Location"
+            placeholder={
+              formData.event_mode === "Online"
+                ? "Location (optional for Online events)"
+                : "Location"
+            }
             value={formData.location}
+            onChange={handleChange}
+            required={formData.event_mode !== "Online"}
+          />
+
+          {/* SCHOOL NAME */}
+          <input
+            type="text"
+            name="school_name"
+            placeholder="School Name"
+            value={formData.school_name}
+            onChange={handleChange}
+            maxLength={150}
+            required
+          />
+
+          {/* DEPARTMENT (the event goes to the HOD of this department) */}
+          <select
+            name="department"
+            value={formData.department}
+            onChange={handleChange}
+            required
+          >
+            <option value="">
+              Select Department
+            </option>
+
+            {DEPARTMENTS.map((departmentName) => (
+              <option key={departmentName} value={departmentName}>
+                {departmentName}
+              </option>
+            ))}
+          </select>
+
+          {/* MODE OF EVENT */}
+          <select
+            name="event_mode"
+            value={formData.event_mode}
+            onChange={handleChange}
+            required
+          >
+            <option value="">
+              Select Mode of Event
+            </option>
+
+            {EVENT_MODES.map((modeName) => (
+              <option key={modeName} value={modeName}>
+                {modeName}
+              </option>
+            ))}
+          </select>
+
+          {/* SPOC NAME */}
+          <input
+            type="text"
+            name="spoc_name"
+            placeholder="SPOC Name"
+            value={formData.spoc_name}
+            onChange={handleChange}
+            maxLength={150}
+            required
+          />
+
+          {/* SPOC DESIGNATION */}
+          <input
+            type="text"
+            name="spoc_designation"
+            placeholder="SPOC Designation"
+            value={formData.spoc_designation}
+            onChange={handleChange}
+            maxLength={150}
+            required
+          />
+
+          {/* SPOC EMAIL */}
+          <input
+            type="email"
+            name="spoc_email"
+            placeholder="SPOC Email Address"
+            value={formData.spoc_email}
             onChange={handleChange}
             required
           />
+
+          {/* SPOC CONTACT NUMBER */}
+          <input
+            type="tel"
+            name="spoc_contact"
+            placeholder="SPOC Contact Number (10 digits)"
+            value={formData.spoc_contact}
+            onChange={handleChange}
+            required
+          />
+
+          {/* The budget is entered by the Club Coordinator / Faculty (Budget
+              Breakup Form). Admin accounts view it only, so it is not here. */}
 
           {/* TOTAL SEATS */}
           <input

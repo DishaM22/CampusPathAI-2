@@ -1,0 +1,67 @@
+﻿pair_id,student_id,event_id,event_title,category,popularity,profile_match,keyword_only,semantic_only,hybrid_full,signals_used
+S1-E01,6ac749c007d82ce7b913a104,6ac328e9876d93fecf502fe7,HACKinDAY,Technical,2,33.3333,66.6667,75.9206,54.627,content|semantic
+S1-E02,6ac749c007d82ce7b913a104,6ada466c46866d4eaefd3b05,Machine Learning Bootcamp: From Basics to Real-World Projects,Technical,0,21.6667,66.6667,73.9918,58.2634,content|semantic|availability|context
+S1-E03,6ac749c007d82ce7b913a104,6ae95a6aa87f394fbb3e5f78,SecureApp & Cloud Innovation 2026,Workshop,0,11.6667,50.0,70.9551,53.0487,content|semantic|availability|context
+S1-E04,6ac749c007d82ce7b913a104,6ad58dd956d76f048df83ae4,INNOVATHON 2026,Hackathon,1,20.0,100.0,70.9594,56.1837,content|semantic|availability|context
+S1-E05,6ac749c007d82ce7b913a104,6ac0826f510213c06aac28fc,AI-Powered Web Development Workshop,Workshop,0,23.3333,100.0,73.8494,48.5914,content|semantic
+S1-E06,6ac749c007d82ce7b913a104,6abe302cb7f914eb0ab232f7,CyberShield 2026,Technical,0,0.0,0.0,73.5107,36.7553,content|semantic
+S1-E07,6ac749c007d82ce7b913a104,6aaeaf5674b4140fb2084a17,AI & Machine Learning Workshop,Technical,0,31.6667,100.0,75.9596,53.8132,content|semantic
+S1-E08,6ac749c007d82ce7b913a104,6abfafc2ee7ed20b79833fa1,AI & Cybersecurity Startup Challenge 2026,Entrepreneurship,0,11.6667,66.6667,71.3535,41.5101,content|semantic
+S1-E09,6ac749c007d82ce7b913a104,6aaeb6c017cb2ff7d8477109,python workshop,Workshop,0,11.6667,33.3333,66.9987,39.3327,content|semantic
+S1-E10,6ac749c007d82ce7b913a104,6ae31933c2861f14e2132227,CyberShield 2027 — Ethical Hacking & Cybersecurity Challenge,Competition,0,0.0,0.0,67.8182,47.1273,content|semantic|availability|context
+S1-E11,6ac749c007d82ce7b913a104,6aaf93e917cb2ff7d847710a,AI webinar,Other,0,10.0,0.0,74.0079,42.004,content|semantic
+S2-E01,6ab76923992aa11e7b4eef2c,6abfafc2ee7ed20b79833fa1,AI & Cybersecurity Startup Challenge 2026,Entrepreneurship,0,15.4167,100.0,74.8531,45.1349,content|semantic
+S2-E02,6ab76923992aa11e7b4eef2c,6ae31933c2861f14e2132227,CyberShield 2027 — Ethical Hacking & Cybersecurity Challenge,Competition,0,0.0,66.6667,71.2542,48.5017,content|semantic|availability|context
+S2-E03,6ab76923992aa11e7b4eef2c,6aaf93e917cb2ff7d847710a,AI webinar,Other,0,0.0,0.0,73.0113,36.5057,content|semantic
+S2-E04,6ab76923992aa11e7b4eef2c,6ada466c46866d4eaefd3b05,Machine Learning Bootcamp: From Basics to Real-World Projects,Technical,0,8.75,33.3333,71.2581,52.0032,content|semantic|availability|context
+S2-E05,6ab76923992aa11e7b4eef2c,6ac0826f510213c06aac28fc,AI-Powered Web Development Workshop,Workshop,0,17.5,66.6667,71.4722,44.4861,content|semantic
+S2-E06,6ab76923992aa11e7b4eef2c,6ae95a6aa87f394fbb3e5f78,SecureApp & Cloud Innovation 2026,Workshop,0,8.75,100.0,73.0323,52.7129,content|semantic|availability|context
+S2-E07,6ab76923992aa11e7b4eef2c,6ac328e9876d93fecf502fe7,HACKinDAY,Technical,2,41.25,100.0,76.8818,59.0659,content|semantic
+S2-E08,6ab76923992aa11e7b4eef2c,6aaeaf5674b4140fb2084a17,AI & Machine Learning Workshop,Technical,0,8.75,33.3333,72.2601,40.505,content|semantic
+S2-E09,6ab76923992aa11e7b4eef2c,6ad58dd956d76f048df83ae4,INNOVATHON 2026,Hackathon,1,6.6667,50.0,73.2626,51.7717,content|semantic|availability|context
+S2-E10,6ab76923992aa11e7b4eef2c,6aaeb6c017cb2ff7d8477109,python workshop,Workshop,0,8.75,33.3333,66.4509,37.6005,content|semantic
+S2-E11,6ab76923992aa11e7b4eef2c,6abe302cb7f914eb0ab232f7,CyberShield 2026,Technical,0,0.0,66.6667,77.5607,38.7804,content|semantic
+S3-E01,6ab5ff6f52b3df9efa84f202,6aaf93e917cb2ff7d847710a,AI webinar,Other,0,0.0,0.0,64.8135,32.4068,content|semantic
+S3-E02,6ab5ff6f52b3df9efa84f202,6ae31933c2861f14e2132227,CyberShield 2027 — Ethical Hacking & Cybersecurity Challenge,Competition,0,0.0,100.0,67.3737,46.9495,content|semantic|availability|context
+S3-E03,6ab5ff6f52b3df9efa84f202,6ada466c46866d4eaefd3b05,Machine Learning Bootcamp: From Basics to Real-World Projects,Technical,0,11.6667,50.0,67.1882,51.542,content|semantic|availability|context
+S3-E04,6ab5ff6f52b3df9efa84f202,6ae95a6aa87f394fbb3e5f78,SecureApp & Cloud Innovation 2026,Workshop,0,31.6667,100.0,82.4655,65.6529,content|semantic|availability|context
+S3-E05,6ab5ff6f52b3df9efa84f202,6ad58dd956d76f048df83ae4,INNOVATHON 2026,Hackathon,1,0.0,0.0,67.6943,46.8777,content|semantic|availability|context
+S3-E06,6ab5ff6f52b3df9efa84f202,6ac328e9876d93fecf502fe7,HACKinDAY,Technical,2,21.6667,66.6667,70.3817,46.0242,content|semantic
+S3-E07,6ab5ff6f52b3df9efa84f202,6aaeaf5674b4140fb2084a17,AI & Machine Learning Workshop,Technical,0,11.6667,33.3333,65.07,38.3683,content|semantic
+S3-E08,6ab5ff6f52b3df9efa84f202,6ac0826f510213c06aac28fc,AI-Powered Web Development Workshop,Workshop,0,11.6667,33.3333,62.4909,37.0788,content|semantic
+S3-E09,6ab5ff6f52b3df9efa84f202,6aaeb6c017cb2ff7d8477109,python workshop,Workshop,0,11.6667,33.3333,63.5386,37.6027,content|semantic
+S3-E10,6ab5ff6f52b3df9efa84f202,6abe302cb7f914eb0ab232f7,CyberShield 2026,Technical,0,0.0,66.6667,73.6531,36.8266,content|semantic
+S3-E11,6ab5ff6f52b3df9efa84f202,6abfafc2ee7ed20b79833fa1,AI & Cybersecurity Startup Challenge 2026,Entrepreneurship,0,11.6667,100.0,67.4425,39.5546,content|semantic
+S4-E01,6aae3564b3d2aeb6e99aa7a1,6aaf93e917cb2ff7d847710a,AI webinar,Other,0,35.0,0.0,78.4024,56.7012,content|semantic
+S4-E02,6aae3564b3d2aeb6e99aa7a1,6ae31933c2861f14e2132227,CyberShield 2027 — Ethical Hacking & Cybersecurity Challenge,Competition,0,0.0,0.0,61.5603,44.6241,content|semantic|availability|context
+S4-E03,6aae3564b3d2aeb6e99aa7a1,6abfafc2ee7ed20b79833fa1,AI & Cybersecurity Startup Challenge 2026,Entrepreneurship,0,50.0,50.0,70.6821,60.341,content|semantic
+S4-E04,6aae3564b3d2aeb6e99aa7a1,6aaeb6c017cb2ff7d8477109,python workshop,Workshop,0,35.0,33.3333,66.0011,50.5005,content|semantic
+S4-E05,6aae3564b3d2aeb6e99aa7a1,6ac0826f510213c06aac28fc,AI-Powered Web Development Workshop,Workshop,0,50.0,66.6667,77.2592,63.6296,content|semantic
+S4-E06,6aae3564b3d2aeb6e99aa7a1,6ad58dd956d76f048df83ae4,INNOVATHON 2026,Hackathon,1,0.0,16.6667,68.5995,47.2398,content|semantic|availability|context
+S4-E07,6aae3564b3d2aeb6e99aa7a1,6ae95a6aa87f394fbb3e5f78,SecureApp & Cloud Innovation 2026,Workshop,0,35.0,50.0,66.155,60.462,content|semantic|availability|context
+S4-E08,6aae3564b3d2aeb6e99aa7a1,6abe302cb7f914eb0ab232f7,CyberShield 2026,Technical,0,0.0,16.6667,68.3134,34.1567,content|semantic
+S4-E09,6aae3564b3d2aeb6e99aa7a1,6ada466c46866d4eaefd3b05,Machine Learning Bootcamp: From Basics to Real-World Projects,Technical,0,35.0,33.3333,70.204,62.0816,content|semantic|availability|context
+S4-E10,6aae3564b3d2aeb6e99aa7a1,6aaeaf5674b4140fb2084a17,AI & Machine Learning Workshop,Technical,0,35.0,33.3333,75.4766,55.2383,content|semantic
+S4-E11,6aae3564b3d2aeb6e99aa7a1,6ac328e9876d93fecf502fe7,HACKinDAY,Technical,2,70.0,33.3333,74.2352,72.1176,content|semantic
+S5-E01,6ae5816b11643adca7279c1e,6aaf93e917cb2ff7d847710a,AI webinar,Other,0,0.0,0.0,69.3323,34.6662,content|semantic
+S5-E02,6ae5816b11643adca7279c1e,6aaeb6c017cb2ff7d8477109,python workshop,Workshop,0,11.6667,33.3333,66.4937,39.0802,content|semantic
+S5-E03,6ae5816b11643adca7279c1e,6ac0826f510213c06aac28fc,AI-Powered Web Development Workshop,Workshop,0,35.0,100.0,68.6536,51.8268,content|semantic
+S5-E04,6ae5816b11643adca7279c1e,6ac328e9876d93fecf502fe7,HACKinDAY,Technical,2,35.0,66.6667,71.9213,53.4607,content|semantic
+S5-E05,6ae5816b11643adca7279c1e,6ada466c46866d4eaefd3b05,Machine Learning Bootcamp: From Basics to Real-World Projects,Technical,0,23.3333,50.0,69.8167,57.26,content|semantic|availability|context
+S5-E06,6ae5816b11643adca7279c1e,6ae31933c2861f14e2132227,CyberShield 2027 — Ethical Hacking & Cybersecurity Challenge,Competition,0,11.6667,0.0,64.1231,50.3159,content|semantic|availability|context
+S5-E07,6ae5816b11643adca7279c1e,6aaeaf5674b4140fb2084a17,AI & Machine Learning Workshop,Technical,0,30.8333,66.6667,69.7191,50.2762,content|semantic
+S5-E08,6ae5816b11643adca7279c1e,6abfafc2ee7ed20b79833fa1,AI & Cybersecurity Startup Challenge 2026,Entrepreneurship,0,16.6667,100.0,69.5399,43.1033,content|semantic
+S5-E09,6ae5816b11643adca7279c1e,6ad58dd956d76f048df83ae4,INNOVATHON 2026,Hackathon,1,24.1667,100.0,69.1492,57.1264,content|semantic|availability|context
+S5-E10,6ae5816b11643adca7279c1e,6abe302cb7f914eb0ab232f7,CyberShield 2026,Technical,0,11.6667,33.3333,71.0406,41.3536,content|semantic
+S5-E11,6ae5816b11643adca7279c1e,6ae95a6aa87f394fbb3e5f78,SecureApp & Cloud Innovation 2026,Workshop,0,35.8333,100.0,72.1834,63.2067,content|semantic|availability|context
+S6-E01,6ac725b180c24a9c9142006b,6aaeaf5674b4140fb2084a17,AI & Machine Learning Workshop,Technical,0,0.0,0.0,63.5063,31.7532,content|semantic
+S6-E02,6ac725b180c24a9c9142006b,6abe302cb7f914eb0ab232f7,CyberShield 2026,Technical,0,0.0,66.6667,73.0825,36.5412,content|semantic
+S6-E03,6ac725b180c24a9c9142006b,6ad58dd956d76f048df83ae4,INNOVATHON 2026,Hackathon,1,0.0,0.0,67.6122,46.8449,content|semantic|availability|context
+S6-E04,6ac725b180c24a9c9142006b,6aaf93e917cb2ff7d847710a,AI webinar,Other,0,0.0,0.0,67.1423,33.5711,content|semantic
+S6-E05,6ac725b180c24a9c9142006b,6ae95a6aa87f394fbb3e5f78,SecureApp & Cloud Innovation 2026,Workshop,0,20.0,100.0,79.7002,59.8801,content|semantic|availability|context
+S6-E06,6ac725b180c24a9c9142006b,6ae31933c2861f14e2132227,CyberShield 2027 — Ethical Hacking & Cybersecurity Challenge,Competition,0,0.0,100.0,67.1196,46.8478,content|semantic|availability|context
+S6-E07,6ac725b180c24a9c9142006b,6abfafc2ee7ed20b79833fa1,AI & Cybersecurity Startup Challenge 2026,Entrepreneurship,0,0.0,66.6667,67.5296,33.7648,content|semantic
+S6-E08,6ac725b180c24a9c9142006b,6ac328e9876d93fecf502fe7,HACKinDAY,Technical,2,10.0,33.3333,68.3576,39.1788,content|semantic
+S6-E09,6ac725b180c24a9c9142006b,6ada466c46866d4eaefd3b05,Machine Learning Bootcamp: From Basics to Real-World Projects,Technical,0,0.0,16.6667,65.9341,46.3736,content|semantic|availability|context
+S6-E10,6ac725b180c24a9c9142006b,6ac0826f510213c06aac28fc,AI-Powered Web Development Workshop,Workshop,0,0.0,0.0,64.7303,32.3652,content|semantic
+S6-E11,6ac725b180c24a9c9142006b,6aaeb6c017cb2ff7d8477109,python workshop,Workshop,0,0.0,0.0,59.491,29.7455,content|semantic

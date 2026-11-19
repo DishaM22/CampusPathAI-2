@@ -87,6 +87,12 @@ const NAV_BY_ROLE = {
       path: "/club-dashboard/events",
     },
     {
+      key: "edit-requests",
+      label: "Edit Requests",
+      icon: "📝",
+      path: "/club-dashboard/edit-requests",
+    },
+    {
       key: "registrations",
       label: "Registrations",
       icon: "📋",

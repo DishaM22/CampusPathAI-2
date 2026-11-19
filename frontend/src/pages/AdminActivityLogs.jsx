@@ -78,11 +78,11 @@ export default function AdminActivityLogs() {
   };
 
   return (
-    <div
+    <div className="admin-page"
       style={{
         minHeight: "100vh",
-        background: "#080d1d",
-        color: "#ffffff",
+        background: "var(--ap-page)",
+        color: "var(--ap-text)",
         display: "flex",
       }}
     >
@@ -130,7 +130,7 @@ export default function AdminActivityLogs() {
               <p
                 style={{
                   marginTop: "8px",
-                  color: "#9aa7c2",
+                  color: "var(--ap-muted)",
                   fontSize: "14px",
                 }}
               >
@@ -142,9 +142,9 @@ export default function AdminActivityLogs() {
               onClick={loadLogs}
               disabled={loading}
               style={{
-                border: "1px solid #33405d",
-                background: "#121a2d",
-                color: "#ffffff",
+                border: "1px solid var(--ap-border)",
+                background: "var(--ap-card2)",
+                color: "var(--ap-text)",
                 borderRadius: "8px",
                 padding: "10px 16px",
                 cursor: loading ? "default" : "pointer",
@@ -182,9 +182,9 @@ export default function AdminActivityLogs() {
           {error && (
             <div
               style={{
-                background: "#3a1518",
-                border: "1px solid #7f2930",
-                color: "#ffb4b8",
+                background: "var(--ap-bad-bg)",
+                border: "1px solid var(--ap-bad-border)",
+                color: "var(--ap-bad-fg)",
                 borderRadius: "10px",
                 padding: "16px",
                 marginBottom: "20px",
@@ -221,12 +221,12 @@ export default function AdminActivityLogs() {
           {loading ? (
             <div
               style={{
-                background: "#101728",
-                border: "1px solid #25304a",
+                background: "var(--ap-card)",
+                border: "1px solid var(--ap-border)",
                 borderRadius: "14px",
                 padding: "40px",
                 textAlign: "center",
-                color: "#9aa7c2",
+                color: "var(--ap-muted)",
               }}
             >
               Loading activity logs...
@@ -234,8 +234,8 @@ export default function AdminActivityLogs() {
           ) : !error && logs.length === 0 ? (
             <div
               style={{
-                background: "#101728",
-                border: "1px solid #25304a",
+                background: "var(--ap-card)",
+                border: "1px solid var(--ap-border)",
                 borderRadius: "14px",
                 padding: "70px 30px",
                 textAlign: "center",
@@ -261,7 +261,7 @@ export default function AdminActivityLogs() {
 
               <p
                 style={{
-                  color: "#9aa7c2",
+                  color: "var(--ap-muted)",
                   marginTop: "8px",
                 }}
               >
@@ -271,8 +271,8 @@ export default function AdminActivityLogs() {
           ) : (
             <div
               style={{
-                background: "#101728",
-                border: "1px solid #25304a",
+                background: "var(--ap-card)",
+                border: "1px solid var(--ap-border)",
                 borderRadius: "14px",
                 overflow: "hidden",
               }}
@@ -292,7 +292,7 @@ export default function AdminActivityLogs() {
                   <thead>
                     <tr
                       style={{
-                        background: "#151e32",
+                        background: "var(--ap-card2)",
                         textAlign: "left",
                       }}
                     >
@@ -310,7 +310,7 @@ export default function AdminActivityLogs() {
                       <tr
                         key={log.id || log._id || index}
                         style={{
-                          borderTop: "1px solid #25304a",
+                          borderTop: "1px solid var(--ap-border)",
                         }}
                       >
                         <Td>
@@ -326,7 +326,7 @@ export default function AdminActivityLogs() {
 
                           <div
                             style={{
-                              color: "#7f8ba5",
+                              color: "var(--ap-muted)",
                               fontSize: "12px",
                               marginTop: "3px",
                             }}
@@ -378,15 +378,15 @@ function Stat({ label, value }) {
   return (
     <div
       style={{
-        background: "#101728",
-        border: "1px solid #25304a",
+        background: "var(--ap-card)",
+        border: "1px solid var(--ap-border)",
         borderRadius: "12px",
         padding: "20px",
       }}
     >
       <div
         style={{
-          color: "#8f9bb5",
+          color: "var(--ap-muted)",
           fontSize: "13px",
         }}
       >
@@ -411,7 +411,7 @@ function Th({ children }) {
     <th
       style={{
         padding: "14px 16px",
-        color: "#9aa7c2",
+        color: "var(--ap-muted)",
         fontSize: "12px",
         fontWeight: 700,
         textTransform: "uppercase",
@@ -428,7 +428,7 @@ function Td({ children }) {
     <td
       style={{
         padding: "16px",
-        color: "#dce3f3",
+        color: "var(--ap-text)",
         fontSize: "13px",
         verticalAlign: "top",
       }}
@@ -451,8 +451,8 @@ function Status({ value }) {
         borderRadius: "999px",
         fontSize: "11px",
         fontWeight: 700,
-        background: successful ? "#123523" : "#3a1518",
-        color: successful ? "#4ade80" : "#ff8b8b",
+        background: successful ? "var(--ap-ok-bg)" : "var(--ap-bad-bg)",
+        color: successful ? "var(--ap-ok-fg)" : "var(--ap-bad-fg)",
       }}
     >
       {value}

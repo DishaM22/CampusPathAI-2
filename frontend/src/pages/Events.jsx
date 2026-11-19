@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  isRegistrationClosed,
+  isRegistrationRequired,
+  NO_REGISTRATION_LABEL,
+} from "../components/registration/RegistrationRequirement";
 
 function Events() {
 
@@ -102,6 +107,30 @@ function Events() {
               </p>
 
 
+              {event.school_name && (
+                <p>
+                  <strong>School:</strong>{" "}
+                  {event.school_name}
+                </p>
+              )}
+
+
+              {event.department && (
+                <p>
+                  <strong>Department:</strong>{" "}
+                  {event.department}
+                </p>
+              )}
+
+
+              {event.event_mode && (
+                <p>
+                  <strong>Mode:</strong>{" "}
+                  {event.event_mode}
+                </p>
+              )}
+
+
               <p>
                 <strong>Date:</strong>{" "}
                 {event.date}
@@ -114,16 +143,31 @@ function Events() {
               </p>
 
 
-              <p>
-                <strong>Location:</strong>{" "}
-                {event.location}
-              </p>
+              {(event.location || event.event_mode === "Online") && (
+                <p>
+                  <strong>Location:</strong>{" "}
+                  {event.location || "Online"}
+                </p>
+              )}
 
 
               <p>
                 <strong>Skills:</strong>{" "}
-                {event.skills.join(", ")}
+                {(event.skills || []).join(", ")}
               </p>
+
+
+              {!isRegistrationRequired(event) && (
+                <p>
+                  <strong>{NO_REGISTRATION_LABEL}</strong>
+                </p>
+              )}
+
+              {isRegistrationClosed(event) && (
+                <p>
+                  <strong>Registration Closed</strong>
+                </p>
+              )}
 
 
               <button>

@@ -1,0 +1,38 @@
+/* Scoped to the modification screens (.mod-*). Uses the dashboards' colour variables. */
+.mod-card { border: 1px solid var(--border); border-radius: var(--radius-s, 8px); padding: 12px; background: var(--surface-2); margin: 10px 0; display: flex; flex-direction: column; gap: 10px; }
+.mod-note { font-size: 12.5px; color: var(--text-dim); margin: 0; }
+.mod-error { font-size: 12.5px; color: var(--danger); margin: 0; }
+.mod-ok { font-size: 12.5px; color: var(--success, #2e9e6b); margin: 0; }
+.mod-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.mod-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 14px; }
+@media (max-width: 640px) { .mod-grid { grid-template-columns: 1fr; } }
+.mod-check { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--text); }
+.mod-modal { max-width: 760px; width: 94vw; max-height: 90vh; overflow-y: auto; text-align: left; }
+.mod-compare { width: 100%; border-collapse: collapse; font-size: 13px; }
+.mod-compare th, .mod-compare td { border-bottom: 1px solid var(--border); padding: 7px 8px; text-align: left; vertical-align: top; white-space: normal; }
+.mod-compare th { color: var(--text-dim); font-weight: 600; font-size: 12px; }
+.mod-old { color: var(--text-dim); text-decoration: line-through; }
+.mod-new { color: var(--text); font-weight: 600; }
+.mod-field { display: flex; flex-direction: column; gap: 4px; }
+.mod-field label { font-size: 12.5px; color: var(--text-dim); }
+.mod-textarea { width: 100%; min-height: 80px; resize: vertical; }
+.mod-persons { display: flex; flex-direction: column; gap: 6px; }
+.mod-person { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; padding: 8px; border: 1px dashed var(--border); border-radius: 8px; }
+.mod-badge { display: inline-block; padding: 2px 9px; border-radius: 99px; font-size: 11.5px; background: var(--primary-soft); color: var(--text); white-space: nowrap; }
+.mod-badge.warn { background: rgba(240, 173, 78, .18); }
+.mod-badge.bad { background: rgba(217, 83, 79, .18); }
+.mod-badge.good { background: rgba(46, 158, 107, .18); }
+.mod-timeline { margin: 0; padding-left: 18px; font-size: 12.5px; color: var(--text-dim); }
+.mod-timeline li { margin: 3px 0; }
+.mod-bell { position: relative; display: inline-block; }
+.mod-bell-btn { position: relative; background: none; border: 1px solid var(--border); border-radius: 10px; padding: 6px 10px; cursor: pointer; color: var(--text); font-size: 16px; }
+.mod-bell-count { position: absolute; top: -6px; right: -6px; background: var(--danger, #d9534f); color: #fff; border-radius: 99px; font-size: 10.5px; padding: 1px 6px; }
+.mod-bell-panel { position: absolute; right: 0; top: 110%; width: min(360px, 92vw); max-height: 420px; overflow-y: auto; background: var(--surface, #fff); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, .2); z-index: 50; padding: 8px; text-align: left; }
+.mod-bell-item { padding: 8px; border-radius: 8px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--border); }
+.mod-bell-item.unread { background: var(--primary-soft); }
+.mod-bell-item b { display: block; margin-bottom: 2px; color: var(--text); }
+.mod-bell-item span { color: var(--text-dim); font-size: 12.5px; }
+.mod-bell-item small { display: block; color: var(--text-faint); margin-top: 3px; }
+.mod-bell-fixed { position: fixed; top: 14px; right: 18px; z-index: 60; }
+.mod-bbf { max-width: 100%; overflow-x: auto; }
+.mod-details summary { cursor: pointer; font-size: 12.5px; color: var(--primary); margin-top: 4px; }
